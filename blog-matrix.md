@@ -1,24 +1,23 @@
-# Matrix Labs introduces the first Cosmos-native stablecoin
+# Vision for Matrix Protocol
 
 Tags: Blockchain, Cryptocurrency, Cosmos, Stablecoin  
-
 Description: Insights on the Matrix protocol taken from the official whitepaper.
 
 ## What is the Matrix protocol?
 
 Matrix is a capital efficient, decentralized protocol for creating stable crypto assets that can be traded on the blockchain. It allows **stable seekers** to convert collateral into stable assets.
 
-## The Cosmos stablecoins 
+## NEO Token - The Cosmos-native stablecoin
 
-Matrix will mint **UNEO**, a stablecoin pegged to Osmosis, thus using OSMO as collateral. 
+Matrix will mint **NEO**, a stablecoin backed by collateral in the form of OSMO and ATOM. Eventually, the protocol will allow for other tokens to be used as collateral from a governance-made whiteliste. These tokens are priced at [Chainlink](https://chain.link/) oracle value and swap with a minimal amount of transaction fees, which go to the protocol. Collateral can always be swapped with its corresponding stablecoin at oracle value.
 
-Stablecoins will eventually be created for the Cosmos ecosystem that are pegged to other whitelisted tokens as collateral. These tokens would be priced at [Chainlink](https://chain.link/) oracle value and swap with a minimal amount of transaction fees, which would go to the protocol. Collateral can always be swapped with its corresponding stablecoin at oracle value.
+<img src="img/user-oracle-matrix.png">
 
 Stables assets are minted whenever whitelisted collateral is sent to the protocol. Whenever stable assets are instead sent to the protocol in exchange for collateral, the stablecoins are burned. These transactions are always executed without price slippage but with a small transaction fee to prevent front-running and flash loan attacks, support the robustness of the protocol, and compensate liquidity providers.
 
 ## How will the token stability be guaranteed? 
 
-#### Matrix DAO | TODO
+#### Matrix DAO
 
 In order for users of Matrix protocol to be guaranteed the option of swapping between collateral and stablecoins, the protocol must remain **over-collateralized**. This problem is addressed through Matrix DAO's **Incentive Pendulum**, a system designed to incentivize liquidity providers (LPs) and drive the utility of the Neo token. 
 
@@ -26,12 +25,10 @@ Matrix gets its liquidity from two places: LPs and the **Insurance Fund (IF)**, 
 
 $$\Xi^{-1} = \frac{\text{LP} - \text{IF}}{\text{LP} + \text{IF}},$$
 
-where $LP$ and $IF$ are the asset contributions from the liquidity providers and Insurance Fund, respectively.
-
-- [ ] TODO Describe inefficient/under-utilized
-- [ ] TODO Q: Wagering ? 
-- [ ] TODO Link to the tokenomics blog post and/or hint at its existence.
-
+where $LP$ and $IF$ are the asset contributions from the liquidity providers and Insurance Fund, respectively. The value of $\Xi^{-1}$ determines the state of the protocol. For example, 
+- **Optimal**, $\Xi^{-1} = \frac{1}{3}$: The desired state, where 67% of the assets are provided by LPs and 33% are provided by the IF. The rewards from the protocol are split with the same proportions.
+- **Under-utilized**, $\Xi^{-1}=0$ : An unsafe state. Here, both LPs and the IF provide 50% of the assets each. 100% of the rewards go to the IF (i.e. no rewards go to LPs). If the protocol is under-utilized, stakers have no incentive to validate the block-chain.
+- **Inefficient**, $\Xi^{-1}=1$: LPs provide 100% of the assets and receive 100% of the protocol rewards. When the protocol becomes inefficient, capital and rewards are re-allocated by the DAO between LPs and the IF to bring about additional investment yields, moving the protocol closer to optimality.
 
 ## Matrix Liquidity Providers
 
@@ -68,39 +65,17 @@ For example, suppose the protocol owns 15 OSMO (collateral), of which 10 comes f
 
 To be clear, IAs are in competition with each other. The less liquidity there is coming from IAs in the protocol, the more a single agent earns from each revenue stream: transaction fees, staking governance tokens, and investment yields.
 
-##### Risks for Insurance Agents
+An IA providing OSMO/ATOM liquidity for the NEO stablecoin would receive sanOSMO, a tokens that quantify the rewards. By issuing sanOSMO, IAs can earn interest and rewards through the token's underlying Osmosis exchange rate, which increases as transaction fees collect for the pool and increases as interest is collected from lent collateral.
 
-The risk for an Insurance Agent is incurring slippage when the protocol is under collateralized, i.e. not being able to reclaim assets with the same value they put in.  
+**Risks for Insurance Agents**: The risk for an Insurance Agent is incurring slippage when the protocol is under collateralized, i.e. not being able to reclaim assets with the same value they put in.  
 
-
-
-Morpheus + section here. 
-
-An IA providing OSMO liquidity for the Neo stablecoin, would receive sanOSMO 
 
 
 
 <!--  -->
 
 ## Partners (ask if this should be included)
-
-
-
-## Team (ask if this should be included)
-
-Matrix Labs
-
-
-Advisors
-- Sankha 
-- Sunny
-- Unique 
-- Rahul
-- Ranit
-- Chjango?
-- Max (maybe)
-- Bill
-- Brian
+- Osmosis
 
 
 ---
@@ -108,11 +83,3 @@ Advisors
 - [ ] TODO | link to whitepaper
 - [ ] TODO | link to project's Twitter
 
-
-
-
-
-- RE Broker → RE Agent as well below
-- Attorney
-- Mortgage Originator: Application in w/ mortgage originator
-- Bankers: 
