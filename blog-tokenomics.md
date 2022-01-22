@@ -63,4 +63,7 @@ The Core Team is expected to raise funding using 10% of the tokens for early bac
 
 <!-- ## Token Utility (paper 2.5) -->
 
+---
+
+*Disclaimer: This content is provided for informational purposes only, and should not be relied upon as legal, business, investment, or tax advice. You should consult your own advisers as to those matters. References to any securities or digital assets are for illustrative purposes only, and do not constitute an investment recommendation or offer to provide investment advisory services. This content is not directed at nor intended for use by any investors or prospective investors, and may not under any circumstances be relied upon when making investment decisions.*
 
