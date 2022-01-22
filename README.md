@@ -7,3 +7,21 @@
 
 [blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-matrix.md
 [blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-tokenomics.md
+
+### Token Release
+
+| Split (%) | Group | Description |  
+| :---: | :----: | ---- | 
+| 40 | Community | gNEO Liquidity Mining Program on Osmosis |
+| 20 | Community | Treasury controlled through Matrix DAO | 
+| 15 | Community | Strategic partners, project advisors, and community members that contribute a lot to the protocol   | 
+| 15 | Core | Core Matrix Team | 
+| 10 | Early Backers | Initial DEX offering (IDO), Seed funding | 
+
+<img src="plots/genesis_supply.svg">
+
+As more tokens are released into the ecosystem, the distribution will eventually rest mostly in the hands of the community.
+
+<img src="plots/final_token_supply.svg">
+
+<img src="plots/token_release_schedule.svg">
