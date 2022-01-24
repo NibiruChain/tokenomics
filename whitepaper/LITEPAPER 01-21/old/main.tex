@@ -1,0 +1,895 @@
+% ****** Start of file aapmsamp.tex ******
+%
+%   This file is part of the AAPM files in the AAPM distribution for REVTeX 4-2.
+%   Version 4.2a of REVTeX, January 2015
+%
+%   Copyright (c) 2015 American Association of Physicists in Medicine (AAPM).
+%
+%   See the AAPM README file for restrictions and more information.
+%
+% TeX'ing this file requires that you have AMS-LaTeX 2.0 installed
+% as well as the rest of the prerequisites for REVTeX 4.2
+%
+% It also requires running BibTeX. The commands are as follows:
+%
+%  1)  latex  aapmsamp
+%  2)  bibtex aapmsamp
+%  3)  latex  aapmsamp
+%  4)  latex  aapmsamp
+%
+% Use this file as a source of example code for your aapm document.
+% Use the file aapmtemplate.tex as a template for your document.
+\documentclass[%
+ aapm,
+ mph,%
+ amsmath,amssymb,
+%preprint,%
+ reprint,%
+%author-year,%
+%author-numerical,%
+]{revtex4-2}
+
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+
+\usepackage[mathlines]{lineno}% Enable numbering of text and display math
+\modulolinenumbers[5]% Line numbers with a gap of 5 lines
+\linenumbers\relax % Commence numbering lines
+
+\begin{document}
+
+\preprint{AAPM/123-QED}
+
+\title[SAAGE]{SAAGE: DECENTRALIZED SPORTS BETTING PROTOCOL}% Force line breaks with \\
+%\thanks{Footnote to title of article.}
+
+\author{Lightning Labs}
+  \email{contact@lightninglabs.org}
+  \altaffiliation[]{Luxemberg.}%Lines break automatically or can be forced with \\
+%\author{B. Author}%
+% \email{Second.Author@institution.edu.}
+%\affiliation{ 
+%Authors' institution and/or address%\\This line break forced with \textbackslash\textbackslash
+%}%
+%
+%\author{C. Author}
+% \homepage{http://www.Second.institution.edu/~Charlie.Author.}
+%\affiliation{%
+%Second institution and/or address%\\This line break forced% with \\
+%}%
+
+\date{\today}% It is always \today, today,
+             %  but any date may be explicitly specified
+
+\begin{abstract}
+We present Synthetic Asset and Gaming Exchange (Saage), a decentralized (and trustless) sports betting protocol powered by Saage token using Cosmos SDK. Saage’s design enables bettors to place wagers on a given sporting event or participate as the book maker by receiving bets as a decentralized and autonomous house (DAO)\footnote{In this paper we will refer to the Saage DAO as the bookmaker} that pays or collects from bettors. Saage leverages the scaling capacity, blockchain interoperability and minimal gas fees of the Cosmos SDK infrastructure to provide a seamless and real-time wagering experience. Cosmos-based Proof of Stake consensus mechanism is used for the validation of the Saage network. Odds data from Saage-listed sporting events is onboarded on-chain using a customized Oracle, which is used for odds display and finality in bets settlement.
+
+%
+\end{abstract}
+
+\keywords{ Sports betting, Decentralized, DAO}
+
+%Use showkeys class option if keyword
+                              %display desired
+\maketitle
+
+
+\section{Introduction}
+
+
+The global sports betting market as reported in~\cite{SportsBets} is projected to grow by \$ 130 billion during 2020-2024, projected at a 10\% CAGR during the forecast period. It is a market that suffers from geographic isolation due to regulatory constraints, centralized operations that are inherently flawed, and lack of access and payment transparency. Yet, this market as an asset-class is unparalleled on a risk adjusted return on capital and diversification.
+
+From a bettor’s perspective, centralization within existing sports betting systems gives an unnecessary informational advantage to the system operators. These platforms require bettors to organize through a trusted third-party for settlement of the bets, with wait times of up to 2 weeks for settlement of those payments. These entities are compromised by their own business interests and goals, to the detriment of the bettor.
+
+In particular, the need to trust a third-party authority (\textbf{house}) and the accumulation of power that follows, leads to: \textit(a) Vulnerability to odds manipulation, non-payment, or delayed payment; \textit(b) Exploitation of identity and betting pattern data collected from bettors; \textit(c) Total and irrecoverable loss of funds due to assets being frozen.
+
+For the first time in human history, users of sports betting platforms can act in whatever capacity they think will generate the best return.  Users can themselves become the house, one that takes wagers and pays odds real time, based on a transparent and fair oracle, and is ultimately governed by the users themselves.  Alternatively, bettors can act as traditional bettors, making wagers with Saage’s Blockchain based betting, which provides trustless and instant finality in bets settlement, removing need for a trusted third-party. 
+
+We summarize our contributions below:
+
+\begin{enumerate}
+\item Saage enables the transfer of control over the sports betting industry from centralized entities to a community of users who value a fair, trustless and decentralized betting system. Saage eliminates the need for a centralized house by implementing a decentralized autonomous organization (DAO) to decide on the rules and the rewards of the protocol, which is implemented on-chain using Cosmos-SDK. 
+\item Saage’s on-chain, automated code-driven model prevents any single point of authority from controlling the publishing of odds, settlement risks from a given outcome of events, or the payout from the result. 
+\item Saage token powers the Saage ecosystem by providing economic incentives to secure the network. Saage token:
+\begin{enumerate}
+\item is a settlement asset; \item provides security for driving economic behavior; \item enables governance on-chain; \item and is a medium of exchange for the ecosystem. 
+\end{enumerate}
+\item Saage DAO is designed to be a two-layered fund with: (1) a \textit{Staking pool} that is responsible for providing instant liquidity and finality to all bets; and (2) an \textit{Insurance fund} that is responsible for paying-out all winning bets.\footnote{The Staking pool and the Insurance fund will be referred to as SP and IF respectively in the paper.}. 
+\begin{enumerate}
+\item The DAO design transforms the traditional, centralized discretionary authority into a fully-automated, on-chain, decentralized, community-driven fund using an Oracle and a decentralized voting mechanism (DVM)\footnote{The design of the Saage Oracle and DVM is going to be presented in a forthcoming paper.}. 
+\item An Incentive Pendulum design is used by Saage DAO to allocate the assets and the rewards between the SP and the IF for all live bets on the platform. , 
+\item The DAO utilizes DVM for on-chain governance voting to reduce token supply from DAO when over capitalized through buy-back mechanism.
+\item Saage DAO will offer collateralized borrowing of Saage tokens leveraging Cosmos IBC to facilitate Saage adoption.
+\end{enumerate}
+\end{enumerate}
+
+The rest of the paper is organized as follows. Section~\ref{Section2} explains the importance of the Saage token. Section~\ref{Section3} explains the design and implementation of the Saage DAO. Section~\ref{Section4} explains the modular Saage architecture: (1) the Blockchain layer; (2) Communication layer; and (3) Applications layer; and how the interaction between the various layers are designed to drive value and utility of the Saage token. 
+
+\section{Saage Token}\label{Section2}
+Saage is the native token that secures and operates the Saage ecosystem. The Saage token release schedule is determined at genesis and published publicly
+%\footnote{The Saage inflation schedule is available at \url{https://saage.io/password.html}.}. 
+Saage token generates utility and value in the following categories.
+
+\begin{enumerate}
+\item Saage token is the settlement and medium of exchange for the Saage ecosystem.
+\item Saage token is the reward asset for Stakers and Bettors.  
+\item Saage token is used for validating the transactions associated with on-chain bet placement and voting needed by DVM. 
+\item Saage token is used to guarantee payouts by the Insurance Fund (IF). 
+\item Saage token is needed to participate in on-chain governance (voting on the staking parameters, voting using DVM, change in governance, deciding on fees and rewards in the system). 
+\end{enumerate}
+
+\section{Saage DAO} \label{Section3}
+
+Saage DAO acts as a bookmaker for any Saage-listed sporting event guaranteeing payout to the betters. Staking pool (SP) in the DAO provides liquidity to the Saage betting system, while the Insurance Fund (IF) acts as the DAO’s payout fund.   Saage DAO’s design enables 24x7 sports betting, guaranteeing full transparency in the settlement and the payment of bets of any size. Reserves in the DAO use an incentive pendulum for the optimal allocation of the assets as well as rewards between the SP and IF. 
+
+\subsection{Incentive Pendulum}
+The objective of the design is to prevent the protocol from becoming \textbf{inefficient}, (majority of assets in SP and not enough funds in the IF for payout to encourage bettors) or \textbf{unsafe} (majority of assets in the IF, increasing bankruptcy risk). The on-chain redistribution of the assets and the rewards between the SP and the IF is automated. The DAO receives inflation rewards and fees generated from betting activity, on-chain governance, odds listing, and on-chain data verification services. When a user bets on any Saage-listed sports event, the bet amount is locked in the IF. The 
+IF is a reserve fund created and seeded at genesis in the DAO to guarantee winning payouts and profit from the bettors’ losses.
+
+At Genesis, the assets in the DAO are divided between the SP and the IF, where the IF is seeded at genesis, and the SP are contingent on user validation and delegation. The IF profit split generated through wagering is calculated as ($\Xi$) where $\Xi = \frac{SP + IF}{SP- IF}$ ; $SP$ = SP assets, $IF$ = IF assets. The DAO uses the inverse of the $\Xi$ to distribute the funds between SP and IF. The incentive pendulum monitors the distribution of the assets and rewards between the SP and the IF to make Saage operate and allocate between the following states. Table(\ref{SP&IF}) provides the split between SF and IF at genesis.
+
+\begin{table}
+\begin{center}
+\def~{\hphantom{0}}
+\begin{tabular}{lccccc}
+Scenario & SP Assets & IF Assets & $\Xi$ & SP Rewards & IF Rewards \\
+\hline
+Optimal & 65\% & 35\% & 3 & 65\% & 35\% \\
+Unsafe & 50\% & 50\% & - & 0 & 100\% \\
+Inefficient & 100\% & 0 & 1 & 100\% & 0\\
+\end{tabular}
+\caption{Incentive Pendulum: Allocation of the capital between the SP and the IF. }
+\label{SP&IF}
+\end{center}
+\end{table}
+
+\textit(a) \textbf{Optimal} This is the desired state, where SP has 65\% of the assets and the IF has 35\% of the assets. In such a situation, the system income is distributed as follows: 33\% for the IF and 67\% for the SP. 
+\textit(b) \textbf{Unsafe} The system may become unsafe where SP has 50\% of the assets and the IF has 50\% of the assets. In such a situation, the system income is distributed as follows: 100\% for the IF and 0\% for the SP. This is a scenario where the stakers have no incentive to validate the block-chain and the inflation rewards~(\ref{appB}) can not be properly tied to restore the balance, returning the system to the optimal state.\footnote{A detailed numerical investigation of the incentive pendulum, staking economics, and risk of the Insurance fund used in Saage will be presented and validated by a third party auditor. The report would provide guidelines for the distribution of the profit from the IF to the Saage DAO based on the total bets placed in Saage over 90 days}. 
+
+
+The unsafe scenario needs to be explained in further detail to completely understand the design of the DAO; the balances of Saage in the Insurance Fund is a function of the betting activity and bankruptcy risk, explained in detail in~\ref{slushfund}. At Genesis, IF will be initialized with a percentage of the Saage tokens. Saage tokens will be utilized to update the weighted capital allocation policy between the SP and IF periodically through on-chain governance (proposal and voting-based governance mechanism). 
+
+\textit(c) \textbf{Inefficient} The system can also become inefficient, where SP has 100\% of the assets and the IF has 0\% of the assets. In such a situation, the system income is distributed as follows: 0\% for the IF and 100\% for the SP. This situation would result in payouts for adverse bet settlements coming from balances in the SP. The expectation is that the Saage DAO would be performing such that capital and rewards will be re-allocated between SP and IF to pursue maximum yield, balancing the imbalance. The Saage incentive pendulum will help maintain the protocol at near-optimal states.  Ultimately Saage stakers can vote to re-capitalize the Insurance Fund.
+
+\subsection{Design of IF}\label{slushfund}
+
+The Insurance Fund monitors the odds of being bankrupt and provides liquidity to guarantee full payment to winning bettors in all scenarios. The IF is initialized with a certain amount of Saage tokens\footnote{Inflation dynamics of the Saage token is presented in Appendix~\ref{appB}} equivalent to dollar amount: 
+Saage is in optimal state: if the IF start with bankroll $\mathcal{W}_0$, and accepts bets which are a fixed fraction $f$ of $\mathcal{W}_0$ each time; with odds $d$ > 0\footnote{IF would receive multiple of d, when the IF wins or lose the multiple of 1}, with winning probability $p$ at each bet and losing probability  $q = 1 - p$.
+If $\mathcal{X}_1, X_2, … X_n$ be variables that indicate whether you win or lose in each of $n$ bets, where $X_i$ = 1 if a win, 0 if a loss; for $i = 1, 2, \ldots, n$. Using compounding at each trial, expected wealth for the IF would be $E[\mathcal{W}_n]$ after $n$ bets is 
+
+\begin{eqnarray}
+E[\mathcal{W}_n] &=& \mathcal{W}_0 E \left[ \prod_{i=1}^{i=n} (1 + f d)^{X_i} (1 - f)^{1 - X_i} \right] \ \nonumber\\
+&=& \mathcal{W}_0 E [\ (1 + f d)^{\sum_i X_i} (1 - f)^{n - \sum_i X_i} ]\ \nonumber\\
+&=& \mathcal{W}_0 \sum_{i=1}^{i=n} {n \choose k} (1 + f d)^ k (1 - f)^{n - k} p^k (1 - p)^{n-k} \nonumber\\
+&=& \mathcal{W}_0 ((1 + f d)p + (1 - f)(1 - p))^n \nonumber\\
+&=& \mathcal{W}_0 (1 + (pd - q)f)^n , 
+\label{expwealth}
+\end{eqnarray}
+For the calculation we use binomial probabilities with $k$ successes in $n$ trials for sports betting related events. From~(\ref{expwealth}), we conclude that the optimal betting fraction is $f = 1$ if $pd - q$ > 0, or 0 otherwise. 
+To calculate the growth rate $G_f$ of the IF for an i.i.d. $\pm1$ sequence $X_i$ with $P[X_i = 1] = p$, we have to assume a generalized version of the wealth $\mathcal{W}$; for $d >0$; the compounded value of your gains after $k$ bets, given initial wealth $\mathcal{W}_0$, is 
+
+\begin{equation} 
+\mathcal{W}(k; f, X) = \mathcal{W}_0(1 + f d)^{\sum_{i=1}^{i=k} X_i} (1 - f)^{k - \sum_{i=1}^{i=k} X_i}, \quad k \geq 1
+\end{equation}
+
+\begin{eqnarray}
+G_f &=& \lim_{n\rightarrow \infty} \frac{1}{n} \log(\mathcal{W}(n; f, \mathcal{X})/\mathcal{W}_0) \nonumber\\
+& = & \lim_{n\rightarrow \infty}\frac{1}{n} \log( (1 + f d)^{\sum_{i=1}^{i=n} X_i} (1 - f)^{k - \sum_{i=1}^{i=n} X_i})
+\label{growthrate}
+\end{eqnarray}
+Using the strong law of large numbers, it can be shown that~(\ref{growthrate}) converges to $\log((1 + f d)^p (1 - f)^{1 - p} )$ and this expression is maximized for 
+\begin{equation}
+f = \left\{
+\begin{array}{ll}
+p - q/d , & p - q/d > 0, \\[2pt]
+0, & p - q/d \leq 0.
+\end{array} \right.
+\label{optbetfraction}
+\end{equation}
+For the IF, the best strategy which compounds the wealth is accept bets a fraction $f = p - q/d$ at each turn when $p - q/d$ > 0 and $f$ = 0 when $p - q/d \leq 0$. Anything greater than the critical fraction $f_c$ for the IF would make IF go broke. When faced with a betting situation in which the probability of winning at each turn varies with random probability $P$, then the optimal fraction is $f = p - q/d$ with $p = E[ P ]$ and $q = 1 - p$. 
+
+Besides monitoring the odds for betting on-chain, IF employs two threshold levels for balancing the reserve: \textbf{baseline cap (lower threshold)} and \textbf{max line cap (upper threshold)}. Baseline threshold occurs when IF is on a losing streak, with the bettors taking advantage of the excessive imbalance in the odds of the Saage- listed sporting events. During such events IF reserve is significantly reduced. The IF enters a protective mode, balances the decision-making ability of the on-chain analytics to stop accepting bets. The Insurance Fund will wait for the odds imbalance to improve and actively tries to off-load the one-sided risk it has accumulated. The system automatically adjusts the Profit and Loss distribution policy if the baseline threshold is met. This ensures that IF  will guarantee winner payouts in the case of unfavorable events. 
+
+When IF reserve exceeds the max line cap, Saage on-chain governance\footnote{Work in progress: Mathematical analysis of the risk offloading of the DAO and the computation max line cap value taking into consideration the total risk for a given time frame.} will be used to implement policies to permanently burn the excess amount from the reserve. Initially the parameters deciding the token buyback schedule is given in Appendix~(\ref{appA}). 
+
+\subsection{Blockchain Implementation} 
+Saage DAO performs as a SP and as an IF. The SP is implemented as a separate module using Cosmos-sdk named DAO settlement and uses the account module for the settlement of the bets. The interaction of the SP modules with other modules on Cosmos-sdk is detailed below: 
+
+\begin{enumerate}
+
+\item During bet placement, the blockchain bet storage module keeper interface \textit{AppendBet} will invoke the DAO settlement and the keeper interface \textit{TransferBetStake}. This invokes the call to the Cosmos SDK in build bank module \textit{SendCoinsFromAccountToModule} to transfer the fund into the Dao account. To guarantee the payout to the winning bettors account \textit{Payout} module invokes the Bank module \textit{SendCoinsFromModuleToAccount}. Bet storage module processes the outcome in determining the winners and invokes the payout to the winner by calling Dao settlement module Payout function, which invokes the Cosmos SDK Bank module \textit{SendCoinsFromModuleToAccount} interface. Bet storage module updates the state of the bet using encrypted data. 
+\item In Phase 1, the payout would happen without using the DVM voting, subsequently in Phase 2 the payout is invoked using DVM\footnote{The voting mechanism is detailed in \textbf{\textit{How DVM works}} section, as it comes at the end of the DVM reveal phase.} 
+Saage oracle\footnote{Separate whitepaper: Saage is powered by an in-house oracle pre-processing odds for Saage- listed sports events feeding the data to Saage. During initial phase, Saage will subscribe to betting odds from reputed sports odds providers and bookmakers and bring it on-chain~\cite{Oracle}.} provides the odds to determine the outcome of the betting event. 
+\end{enumerate}
+
+
+\section{Blockchain Layer}\label{Section4}
+
+\subsection{Saage Betting Cycle} 
+Betting on Saage is a sequential process from the creation of betting events to the payout. We outline the full decentralization and features deployment on Saage over three phases.
+
+\begin{enumerate}
+
+\item \textbf{Betting Event Creation} In Phase1, Saage will provide odds for sports events from all the reputed third-party betting providers using a customized Oracle solution. In Phase 2, Saage token holders will be allowed to become additional providers of odds for Saage-listed sports events. In Phase 3; only odds provided by Saage token holders would be allowed for Saage listed sports events to celebrate full de-centralization and fairness in the settlement of the bets. 
+
+\item \textbf{Bet Placement} All bets are recorded on-chain in Saage, where users can place bets on listed sports events.
+
+\item \textbf{Event Completion} Saage will fetch the event completion information from third-party providers. In Phase 2, Saage token holders can validate event completion data, progressively leading to decentralization.
+
+\item \textbf{Data Verification Mechanism\footnote{Data Verification Mechanism would be referred to as DVM}} In Phase 1, winners on the Saage platform would be paid instantly, since all betting outcomes would be based on pre-match odds provided at the start of the event. In Phase 2 and 3, Saage users will get to vote to on the settlement of the outcome of the events based on voting using DVM. The voting would be based on the amount of Saage tokens and be recorded on the Saage blockchain and provide the finality regardless who the counterparties are.
+
+\item \textbf{Bet Settlement} In Phase 1, the bet settlement would be instant due to the binary nature of the sports events listed on Saage and winners will receive their payout amount. In Phases 2-3 for complicated outcomes, the settlement of the outcome will be decided based on voting using the DVM. Saage will do the bet settlement for the betters who participated in the betting event. 
+
+\item \textbf{Betting State Management} Saage has implemented the \textbf{bet storage module} to maintain bet states and to handle bets placed by users using the cosmos sdk module. 
+
+\end{enumerate}
+
+
+
+
+
+
+
+\begin{table*}
+\caption{\label{tab:table3}This is a wide table that spans the page
+width in \texttt{twocolumn} mode. It is formatted using the
+\texttt{table*} environment. It also demonstrates the use of
+\textbackslash\texttt{multicolumn} in rows with entries that span
+more than one column.}
+\begin{ruledtabular}
+\begin{tabular}{ccccc}
+Saage & Design \& Functions \\
+\hline
+ Token & Settlement | Security | Governance | Medium of Exchange\\
+ DAO & 2-layered Fund | Incentive pendulum for rewards and asset distribution (SF + IF)\\
+ DVM & Voting for Governance using Saage Token\\
+CDP & Lending of Saage tokens for live bets
+\hline
+
+
+% &\multicolumn{2}{c}{$D_{4h}^1$}&\multicolumn{2}{c}{$D_{4h}^5$}\\
+% Ion&1st alternative&2nd alternative&lst alternative
+%&2nd alternative\\ \hline
+% K&$(2e)+(2f)$&$(4i)$ &$(2c)+(2d)$&$(4f)$ \\
+% Mn&$(2g)$\footnote{The $z$ parameter of these positions is $z\sim\frac{1}{4}$.}
+% &$(a)+(b)+(c)+(d)$&$(4e)$&$(2a)+(2b)$\\
+% Cl&$(a)+(b)+(c)+(d)$&$(2g)$\footnote{This is a footnote in a table that spans the full page
+%width in \texttt{twocolumn} mode. It is supposed to set on the full width of the page, just as the caption does. }
+% &$(4e)^{\text{a}}$\\
+% He&$(8r)^{\text{a}}$&$(4j)^{\text{a}}$&$(4g)^{\text{a}}$\\
+% Ag& &$(4k)^{\text{a}}$& &$(4h)^{\text{a}}$\\
+
+
+\end{tabular}
+\end{ruledtabular}
+\end{table*}
+
+%
+%\begin{table}
+%\begin{center}
+%\def~{\hphantom{0}}
+%\begin{tabular}{lccccc}
+%Saage & Design \& Functions \\
+%\hline
+% Token & Settlement | Security | Governance | Medium of Exchange\\
+% DAO & 2-layered Fund | Incentive pendulum for rewards and asset distribution (SF + IF)\\
+% DVM & Voting for Governance using Saage Token\\
+%CDP & Lending of Saage tokens for live bets
+%\hline
+%\end{tabular}
+%\caption{Major Contributions in Saage.}
+%\label{SaageContributions}
+%\end{center}
+%\end{table}
+
+\subsection{How bet placement works?}
+Saage users can use a mobile app or the desktop version to place a bet on listed sports events. 
+\begin{enumerate}
+\item The application will fetch the user's private key from the Saage in-app secure wallet~(\ref{SaageSecureWallet}), sign the user's bet selection with the private key, then broadcast the transaction to the Saage node bet storage transaction endpoint\footnote{As the protocol matures the integration of the ledger/trust wallet would be allowed}.
+\item When the signed transaction arrives at the bet storage transaction endpoint, it will relay the message to the bet storage handlers for managing the creation of a bet object in this module. 
+\item The state of the bet objects is maintained in the \textbf{bet storage module} in the keeper persistent key valet store. 
+\item Bet storage keeper interface \textit{AppendBet} will process this bet placement transaction message of bet placement and the key valet store will be fetched and updated by the other custom module to maintain the bet objects’ state machine. 
+\item Saage node'’s tendermint end point will receive the message, and then it will enter the consensus mechanism among other operating nodes. Once the consensus is done and the transaction is finalized, it will be delivered to the receiving node application blockchain interface (tendermint ABCI). ABCI will deliver the message to its destination bet storage module handler. This handler will verify the type of the message, and if it comes to know that it is bet message, it will call the bet storage keeper interface function \textit{AppendBet} to create a new bet object with the relevant input parameters like the bet amount, \textit{oddID}, the user’s public address, and a unique bet id. It will then store the bet on-chain in an encrypted format. The state of each individual bet is maintained on-chain. To lock the betting amount of the placed bet, \textit{betstorage} invoke the bet amount locking function \textit{TransferBetStake}, which transfers the Saage tokens from bettors to the DAO. 
+\end{enumerate}
+
+\subsection{Communication Layer}
+%
+
+The communication layer interfaces between the front and back end of the Saage. This layer converts and formats the odds data from Saage-listed sports events to the app and brings it on-chain. In Phase 1, Saage will list sports events with binary outcomes, so the settlement of bets would be instant. In subsequent phases, Saage will use the DVM, a community-driven, manual voting mechanism to decide on the settlement of the outcomes for the listed sports events. 
+
+\subsection{Application Layer} 
+
+Saage front end is designed to be available on iOS, Android, and desktops. The front end comes with a secure in-build wallet that supports most of the coins in the Cosmos ecosystem. The Saage application will display the upcoming sports events and the odds associated with them. Saage will display a sufficient range of betting odds from reputed odds providers, stakers, and internal, analytic community-driven models for managing Saage DAO risk. 
+
+\subsubsection{Saage Secure Wallet}\label{SaageSecureWallet}
+
+Saage has a native non-custodial wallet built using Hierarchical Deterministic wallet concept, which supports secure account creation and login functionality. Saage wallet users can check their balance, send, and withdraw Saage tokens when connected to the Saage wallet. Saage wallet is designed to make sure the mnemonics will be generated and stored in the user’s device. Saage user’s keys will be stored in the user device’s browser extension or app cache. Saage wallet users can sign the transaction before sending it to the Saage blockchain.
+
+\section{Conclusion}
+
+Saage’s enables bettors to use Saage token to place wagers on a given sporting event or participate as the book maker by receiving bets as a DAO using Cosmos SDK.  Table~(\ref{SaageContributions}) lists the contributions and the innovation of a decentralized community run sports betting protocol.
+
+
+
+
+%\begin{quotation}
+%The ``lead paragraph'' is encapsulated with the \LaTeX\ 
+%\verb+quotation+ environment and is formatted as a single paragraph before the first section heading. 
+%(The \verb+quotation+ environment reverts to its usual meaning after the first sectioning command.) 
+%Note that numbered references are allowed in the lead paragraph.
+%%
+%The lead paragraph will only be found in an article being prepared for the journal \textit{Chaos}.
+%\end{quotation}
+%
+%\section{\label{sec:level1}First-level heading:\protect\\ The line
+%break was forced \lowercase{via} \textbackslash\textbackslash}
+%
+%This sample document demonstrates proper use of REV\TeX~4.2 (and
+%\LaTeXe) in manuscripts prepared for submission to AAPM
+%journals. Further information can be found in the documentation included in the distribution or available at
+%\url{http://www.aapm.org} and in the documentation for 
+%REV\TeX~4.2 itself.
+%
+%When commands are referred to in this example file, they are always
+%shown with their required arguments, using normal \TeX{} format. In
+%this format, \verb+#1+, \verb+#2+, etc. stand for required
+%author-supplied arguments to commands. For example, in
+%\verb+\section{#1}+ the \verb+#1+ stands for the title text of the
+%author's section heading, and in \verb+\title{#1}+ the \verb+#1+
+%stands for the title text of the paper.
+%
+%Line breaks in section headings at all levels can be introduced using
+%\textbackslash\textbackslash. A blank input line tells \TeX\ that the
+%paragraph has ended. 
+%
+%\subsection{\label{sec:level2}Second-level heading: Formatting}
+%
+%This file may be formatted in both the \texttt{preprint} (the default) and
+%\texttt{reprint} styles; the latter format may be used to 
+%mimic final journal output. In addition, there is another
+%option available, \texttt{lengthcheck}, which formats the document as closely
+%as possible to an actual journal article, to facilitate the author's
+%performance of a length check. Either format may be used for submission
+%purposes; however, for peer review and production, AAPM will format the
+%article using the \texttt{preprint} class option. Hence, it is
+%essential that authors check that their manuscripts format acceptably
+%under \texttt{preprint}. Manuscripts submitted to AAPM that do not
+%format correctly under the \texttt{preprint} option may be delayed in
+%both the editorial and production processes.
+%
+%The \texttt{widetext} environment will make the text the width of the
+%full page, as on page~\pageref{eq:wideeq}. (Note the use the
+%\verb+\pageref{#1}+ to get the page number right automatically.) The
+%width-changing commands only take effect in \texttt{twocolumn}
+%formatting. It has no effect if \texttt{preprint} formatting is chosen
+%instead.
+%
+%\subsubsection{\label{sec:level3}Third-level heading: Citations and Footnotes}
+%
+%Citations in text refer to entries in the Bibliography;
+%they use the commands \verb+\cite{#1}+ or \verb+\onlinecite{#1}+. 
+%Because REV\TeX\ uses the \verb+natbib+ package of Patrick Daly, 
+%its entire repertoire of commands are available in your document;
+%see the \verb+natbib+ documentation for further details.
+%The argument of \verb+\cite+ is a comma-separated list of \emph{keys};
+%a key may consist of letters and numerals. 
+%
+%By default, AAPM citations are numerical; \cite{feyn54} 
+%to give a textual citation, use \verb+\onlinecite{#1}+: (Refs.~\onlinecite{witten2001,epr,Bire82}). 
+%REV\TeX\ ``collapses'' lists of consecutive numerical citations when appropriate. 
+%To illustrate, we cite several together \cite{feyn54,witten2001,epr,Berman1983}, 
+%and once again (Refs.~\onlinecite{epr,feyn54,Bire82,Berman1983}). 
+%Note that, when numerical citations are used, the references were sorted into the same order they appear in the bibliography. 
+%
+%A reference within the bibliography is specified with a \verb+\bibitem{#1}+ command,
+%where the argument is the citation key mentioned above. 
+%\verb+\bibitem{#1}+ commands may be crafted by hand or, preferably,
+%generated by using Bib\TeX. 
+%The AAPM styles for REV\TeX~4 include Bib\TeX\ style file
+%\verb+aapmrev4-2.bst+, appropriate for
+%numbered bibliography. 
+%REV\TeX~4 will automatically choose the style appropriate for 
+%the document's selected class options: the default is numerical.
+%
+%This sample file demonstrates a simple use of Bib\TeX\ 
+%via a \verb+\bibliography+ command referencing the \verb+aapmsamp.bib+ file.
+%Running Bib\TeX\ (in this case \texttt{bibtex
+%aapmsamp}) after the first pass of \LaTeX\ produces the file
+%\verb+aapmsamp.bbl+ which contains the automatically formatted
+%\verb+\bibitem+ commands (including extra markup information via
+%\verb+\bibinfo+ commands). If not using Bib\TeX, the
+%\verb+thebibiliography+ environment should be used instead.
+%
+%\paragraph{Fourth-level heading is run in.}%
+%Footnotes are produced using the \verb+\footnote{#1}+ command. 
+%Numerical style citations put footnotes into the 
+%bibliography\footnote{Automatically placing footnotes into the bibliography requires using BibTeX to compile the bibliography.}.
+%Note: due to the method used to place footnotes in the bibliography, \emph{you
+%must re-run BibTeX every time you change any of your document's
+%footnotes}. 
+%
+%\section{Math and Equations}
+%Inline math may be typeset using the \verb+$+ delimiters. Bold math
+%symbols may be achieved using the \verb+bm+ package and the
+%\verb+\bm{#1}+ command it supplies. For instance, a bold $\alpha$ can
+%be typeset as \verb+$\bm{\alpha}$+ giving $\bm{\alpha}$. Fraktur and
+%Blackboard (or open face or double struck) characters should be
+%typeset using the \verb+\mathfrak{#1}+ and \verb+\mathbb{#1}+ commands
+%respectively. Both are supplied by the \texttt{amssymb} package. For
+%example, \verb+$\mathbb{R}$+ gives $\mathbb{R}$ and
+%\verb+$\mathfrak{G}$+ gives $\mathfrak{G}$
+%
+%In \LaTeX\ there are many different ways to display equations, and a
+%few preferred ways are noted below. Displayed math will flush left by
+%default.
+%
+%Below we have numbered single-line equations, the most common kind: 
+%\begin{eqnarray}
+%\chi_+(p)\alt{\bf [}2|{\bf p}|(|{\bf p}|+p_z){\bf ]}^{-1/2}
+%\left(
+%\begin{array}{c}
+%|{\bf p}|+p_z\\
+%px+ip_y
+%\end{array}\right)\;,
+%\\
+%\left\{%
+% \openone234567890abc123\alpha\beta\gamma\delta1234556\alpha\beta
+% \frac{1\sum^{a}_{b}}{A^2}%
+%\right\}%
+%\label{eq:one}.
+%\end{eqnarray}
+%Note the open one in Eq.~(\ref{eq:one}).
+%
+%Not all numbered equations will fit within a narrow column this
+%way. The equation number will move down automatically if it cannot fit
+%on the same line with a one-line equation:
+%\begin{equation}
+%\left\{
+% ab12345678abc123456abcdef\alpha\beta\gamma\delta1234556\alpha\beta
+% \frac{1\sum^{a}_{b}}{A^2}%
+%\right\}.
+%\end{equation}
+%
+%When the \verb+\label{#1}+ command is used [cf. input for
+%Eq.~(\ref{eq:one})], the equation can be referred to in text without
+%knowing the equation number that \TeX\ will assign to it. Just
+%use \verb+\ref{#1}+, where \verb+#1+ is the same name that used in
+%the \verb+\label{#1}+ command.
+%
+%Unnumbered single-line equations can be typeset
+%using the \verb+\[+, \verb+\]+ format:
+%\[g^+g^+ \rightarrow g^+g^+g^+g^+ \dots ~,~~q^+q^+\rightarrow
+%q^+g^+g^+ \dots ~. \]
+%
+%\subsection{Multiline equations}
+%
+%Multiline equations are obtained by using the \verb+eqnarray+
+%environment.  Use the \verb+\nonumber+ command at the end of each line
+%to avoid assigning a number:
+%\begin{eqnarray}
+%{\cal M}=&&ig_Z^2(4E_1E_2)^{1/2}(l_i^2)^{-1}
+%\delta_{\sigma_1,-\sigma_2}
+%(g_{\sigma_2}^e)^2\chi_{-\sigma_2}(p_2)\nonumber\\
+%&&\times
+%[\epsilon_jl_i\epsilon_i]_{\sigma_1}\chi_{\sigma_1}(p_1),
+%\end{eqnarray}
+%\begin{eqnarray}
+%\sum \vert M^{\text{viol}}_g \vert ^2&=&g^{2n-4}_S(Q^2)~N^{n-2}
+%        (N^2-1)\nonumber \\
+% & &\times \left( \sum_{i<j}\right)
+%  \sum_{\text{perm}}
+% \frac{1}{S_{12}}
+% \frac{1}{S_{12}}
+% \sum_\tau c^f_\tau~.
+%\end{eqnarray}
+%\textbf{Note:} Do not use \verb+\label{#1}+ on a line of a multiline
+%equation if \verb+\nonumber+ is also used on that line. Incorrect
+%cross-referencing will result. Notice the use \verb+\text{#1}+ for
+%using a Roman font within a math environment.
+%
+%To set a multiline equation without \emph{any} equation
+%numbers, use the \verb+\begin{eqnarray*}+,
+%\verb+\end{eqnarray*}+ format:
+%\begin{eqnarray*}
+%\sum \vert M^{\text{viol}}_g \vert ^2&=&g^{2n-4}_S(Q^2)~N^{n-2}
+%        (N^2-1)\\
+% & &\times \left( \sum_{i<j}\right)
+% \left(
+%  \sum_{\text{perm}}\frac{1}{S_{12}S_{23}S_{n1}}
+% \right)
+% \frac{1}{S_{12}}~.
+%\end{eqnarray*}
+%To obtain numbers not normally produced by the automatic numbering,
+%use the \verb+\tag{#1}+ command, where \verb+#1+ is the desired
+%equation number. For example, to get an equation number of
+%(\ref{eq:mynum}),
+%\begin{equation}
+%g^+g^+ \rightarrow g^+g^+g^+g^+ \dots ~,~~q^+q^+\rightarrow
+%q^+g^+g^+ \dots ~. \tag{2.6$'$}\label{eq:mynum}
+%\end{equation}
+%
+%A few notes on \verb=\tag{#1}=. \verb+\tag{#1}+ requires
+%\texttt{amsmath}. The \verb+\tag{#1}+ must come before the
+%\verb+\label{#1}+, if any. The numbering set with \verb+\tag{#1}+ is
+%\textit{transparent} to the automatic numbering in REV\TeX{};
+%therefore, the number must be known ahead of time, and it must be
+%manually adjusted if other equations are added. \verb+\tag{#1}+ works
+%with both single-line and multiline equations. \verb+\tag{#1}+ should
+%only be used in exceptional case - do not use it to number all
+%equations in a paper.
+%
+%Note the equation number gets reset again:
+%\begin{equation}
+%g^+g^+g^+ \rightarrow g^+g^+g^+g^+g^+ \dots ~,~~q^+q^+\rightarrow
+%q^+g^+g^+ \dots ~. 
+%\end{equation}
+%
+%Enclosing single-line and multiline equations in
+%\verb+\begin{subequations}+ and \verb+\end{subequations}+ will produce
+%a set of equations that are ``numbered'' with letters, as shown in
+%Eqs.~(\ref{subeq:1}) and (\ref{subeq:2}) below:
+%\begin{subequations}
+%\label{eq:whole}
+%\begin{equation}
+%\left\{
+% abc123456abcdef\alpha\beta\gamma\delta1234556\alpha\beta
+% \frac{1\sum^{a}_{b}}{A^2}
+%\right\},\label{subeq:1}
+%\end{equation}
+%\begin{eqnarray}
+%{\cal M}=&&ig_Z^2(4E_1E_2)^{1/2}(l_i^2)^{-1}
+%(g_{\sigma_2}^e)^2\chi_{-\sigma_2}(p_2)\nonumber\\
+%&&\times
+%[\epsilon_i]_{\sigma_1}\chi_{\sigma_1}(p_1).\label{subeq:2}
+%\end{eqnarray}
+%\end{subequations}
+%Putting a \verb+\label{#1}+ command right after the
+%\verb+\begin{subequations}+, allows one to
+%reference all the equations in a subequations environment. For
+%example, the equations in the preceding subequations environment were
+%Eqs.~(\ref{eq:whole}).
+%
+%\subsubsection{Wide equations}
+%The equation that follows is set in a wide format, i.e., it spans
+%across the full page. The wide format is reserved for long equations
+%that cannot be easily broken into four lines or less:
+%\begin{widetext}
+%\begin{equation}
+%{\cal R}^{(\text{d})}=
+% g_{\sigma_2}^e
+% \left(
+%   \frac{[\Gamma^Z(3,21)]_{\sigma_1}}{Q_{12}^2-M_W^2}
+%  +\frac{[\Gamma^Z(13,2)]_{\sigma_1}}{Q_{13}^2-M_W^2}
+% \right)
+% + x_WQ_e
+% \left(
+%   \frac{[\Gamma^\gamma(3,21)]_{\sigma_1}}{Q_{12}^2-M_W^2}
+%  +\frac{[\Gamma^\gamma(13,2)]_{\sigma_1}}{Q_{13}^2-M_W^2}
+% \right)\;. \label{eq:wideeq}
+%\end{equation}
+%\end{widetext}
+%This is typed to show the output is in wide format.
+%(Since there is no input line between \verb+\equation+ and
+%this paragraph, there is no paragraph indent for this paragraph.)
+%\section{Cross-referencing}
+%REV\TeX{} will automatically number sections, equations, figure
+%captions, and tables. In order to reference them in text, use the
+%\verb+\label{#1}+ and \verb+\ref{#1}+ commands. To reference a
+%particular page, use the \verb+\pageref{#1}+ command.
+%
+%The \verb+\label{#1}+ should appear in a section heading, within an
+%equation, or in a table or figure caption. The \verb+\ref{#1}+ command
+%is used in the text where the citation is to be displayed.  Some
+%examples: Section~\ref{sec:level1} on page~\pageref{sec:level1},
+%Table~\ref{tab:table1},%
+%\begin{table}
+%\caption{\label{tab:table1}This is a narrow table which fits into a
+%text column when using \texttt{twocolumn} formatting. Note that
+%REV\TeX~4 adjusts the intercolumn spacing so that the table fills the
+%entire width of the column. Table captions are numbered
+%automatically. This table illustrates left-aligned, centered, and
+%right-aligned columns.  }
+%\begin{ruledtabular}
+%\begin{tabular}{lcr}
+%Left\footnote{Note a.}&Centered\footnote{Note b.}&Right\\
+%\hline
+%1 & 2 & 3\\
+%10 & 20 & 30\\
+%100 & 200 & 300\\
+%\end{tabular}
+%\end{ruledtabular}
+%\end{table}
+%and Fig.~\ref{fig:epsart}.
+%
+%\section{Figures and Tables}
+%Figures and tables are typically ``floats''; \LaTeX\ determines their
+%final position via placement rules. 
+%\LaTeX\ isn't always successful in automatically placing floats where you wish them.
+%
+%Figures are marked up with the \texttt{figure} environment, the content of which
+%imports the image (\verb+\includegraphics+) followed by the figure caption (\verb+\caption+).
+%The argument of the latter command should itself contain a \verb+\label+ command if you
+%wish to refer to your figure with \verb+\ref+.
+%
+%Import your image using either the \texttt{graphics} or
+%\texttt{graphix} packages. These packages both define the
+%\verb+\includegraphics{#1}+ command, but they differ in the optional
+%arguments for specifying the orientation, scaling, and translation of the figure.
+%Fig.~\ref{fig:epsart}%
+%\begin{figure}
+%\includegraphics{fig_1}% Here is how to import EPS art
+%\caption{\label{fig:epsart} A figure caption. The figure captions are
+%automatically numbered.}
+%\end{figure}
+%is small enough to fit in a single column, while
+%Fig.~\ref{fig:wide}%
+%\begin{figure*}
+%\includegraphics{fig_2}% Here is how to import EPS art
+%\caption{\label{fig:wide}Use the \texttt{figure*} environment to get a wide
+%figure, spanning the page in \texttt{twocolumn} formatting.}
+%\end{figure*}
+%is too wide for a single column,
+%so instead the \texttt{figure*} environment has been used.
+%
+%The analog of the \texttt{figure} environment is \texttt{table}, which uses
+%the same \verb+\caption+ command.
+%However, you should type your caption command first within the \texttt{table}, 
+%instead of last as you did for \texttt{figure}.
+%
+%The heart of any table is the \texttt{tabular} environment,
+%which represents the table content as a (vertical) sequence of table rows,
+%each containing a (horizontal) sequence of table cells. 
+%Cells are separated by the \verb+&+ character;
+%the row terminates with \verb+\\+. 
+%The required argument for the \texttt{tabular} environment
+%specifies how data are displayed in each of the columns. 
+%For instance, a column
+%may be centered (\verb+c+), left-justified (\verb+l+), right-justified (\verb+r+),
+%or aligned on a decimal point (\verb+d+). 
+%(Table~\ref{tab:table4}%
+%\begin{table}
+%\caption{\label{tab:table4}Numbers in columns Three--Five have been
+%aligned by using the ``d'' column specifier (requires the
+%\texttt{dcolumn} package). 
+%Non-numeric entries (those entries without
+%a ``.'') in a ``d'' column are aligned on the decimal point. 
+%Use the
+%``D'' specifier for more complex layouts. }
+%\begin{ruledtabular}
+%\begin{tabular}{ccddd}
+%One&Two&\mbox{Three}&\mbox{Four}&\mbox{Five}\\
+%\hline
+%one&two&\mbox{three}&\mbox{four}&\mbox{five}\\
+%He&2& 2.77234 & 45672. & 0.69 \\
+%C\footnote{Some tables require footnotes.}
+%  &C\footnote{Some tables need more than one footnote.}
+%  & 12537.64 & 37.66345 & 86.37 \\
+%\end{tabular}
+%\end{ruledtabular}
+%\end{table}
+%illustrates the use of decimal column alignment.)
+%
+%Extra column-spacing may be be specified as well, although
+%REV\TeX~4 sets this spacing so that the columns fill the width of the
+%table.
+%Horizontal rules are typeset using the \verb+\hline+
+%command.
+%The doubled (or Scotch) rules that appear at the top and
+%bottom of a table can be achieved by enclosing the \texttt{tabular}
+%environment within a \texttt{ruledtabular} environment.
+%Rows whose columns span multiple columns can be typeset using \LaTeX's
+%\verb+\multicolumn{#1}{#2}{#3}+ command
+%(for example, see the first row of Table~\ref{tab:table3}).%
+%\begin{table*}
+%\caption{\label{tab:table3}This is a wide table that spans the page
+%width in \texttt{twocolumn} mode. It is formatted using the
+%\texttt{table*} environment. It also demonstrates the use of
+%\textbackslash\texttt{multicolumn} in rows with entries that span
+%more than one column.}
+%\begin{ruledtabular}
+%\begin{tabular}{ccccc}
+% &\multicolumn{2}{c}{$D_{4h}^1$}&\multicolumn{2}{c}{$D_{4h}^5$}\\
+% Ion&1st alternative&2nd alternative&lst alternative
+%&2nd alternative\\ \hline
+% K&$(2e)+(2f)$&$(4i)$ &$(2c)+(2d)$&$(4f)$ \\
+% Mn&$(2g)$\footnote{The $z$ parameter of these positions is $z\sim\frac{1}{4}$.}
+% &$(a)+(b)+(c)+(d)$&$(4e)$&$(2a)+(2b)$\\
+% Cl&$(a)+(b)+(c)+(d)$&$(2g)$\footnote{This is a footnote in a table that spans the full page
+%width in \texttt{twocolumn} mode. It is supposed to set on the full width of the page, just as the caption does. }
+% &$(4e)^{\text{a}}$\\
+% He&$(8r)^{\text{a}}$&$(4j)^{\text{a}}$&$(4g)^{\text{a}}$\\
+% Ag& &$(4k)^{\text{a}}$& &$(4h)^{\text{a}}$\\
+%\end{tabular}
+%\end{ruledtabular}
+%\end{table*}
+%
+%The tables in this document illustrate various effects.
+%Tables that fit in a narrow column are contained in a \texttt{table}
+%environment.
+%Table~\ref{tab:table3} is a wide table, therefore set with the
+%\texttt{table*} environment.
+%Lengthy tables may need to break across pages.
+%A simple way to allow this is to specify
+%the \verb+[H]+ float placement on the \texttt{table} or
+%\texttt{table*} environment.
+%Alternatively, using the standard \LaTeXe\ package \texttt{longtable} 
+%gives more control over how tables break and allows headers and footers 
+%to be specified for each page of the table.
+%An example of the use of \texttt{longtable} can be found
+%in the file \texttt{summary.tex} that is included with the REV\TeX~4
+%distribution.
+%
+%There are two methods for setting footnotes within a table (these
+%footnotes will be displayed directly below the table rather than at
+%the bottom of the page or in the bibliography).
+%The easiest
+%and preferred method is just to use the \verb+\footnote{#1}+
+%command. This will automatically enumerate the footnotes with
+%lowercase roman letters.
+%However, it is sometimes necessary to have
+%multiple entries in the table share the same footnote.
+%In this case,
+%create the footnotes using
+%\verb+\footnotemark[#1]+ and \verb+\footnotetext[#1]{#2}+.
+%\texttt{\#1} is a numeric value.
+%Each time the same value for \texttt{\#1} is used, 
+%the same mark is produced in the table. 
+%The \verb+\footnotetext[#1]{#2}+ commands are placed after the \texttt{tabular}
+%environment. 
+%Examine the \LaTeX\ source and output for Tables~\ref{tab:table1} and 
+%\ref{tab:table2}%
+%\begin{table}
+%\caption{\label{tab:table2}A table with more columns still fits
+%properly in a column. Note that several entries share the same
+%footnote. Inspect the \LaTeX\ input for this table to see
+%exactly how it is done.}
+%\begin{ruledtabular}
+%\begin{tabular}{cccccccc}
+% &$r_c$ (\AA)&$r_0$ (\AA)&$\kappa r_0$&
+% &$r_c$ (\AA) &$r_0$ (\AA)&$\kappa r_0$\\
+%\hline
+%Cu& 0.800 & 14.10 & 2.550 &Sn\footnotemark[1]
+%& 0.680 & 1.870 & 3.700 \\
+%Ag& 0.990 & 15.90 & 2.710 &Pb\footnotemark[2]
+%& 0.450 & 1.930 & 3.760 \\
+%Au& 1.150 & 15.90 & 2.710 &Ca\footnotemark[3]
+%& 0.750 & 2.170 & 3.560 \\
+%Mg& 0.490 & 17.60 & 3.200 &Sr\footnotemark[4]
+%& 0.900 & 2.370 & 3.720 \\
+%Zn& 0.300 & 15.20 & 2.970 &Li\footnotemark[2]
+%& 0.380 & 1.730 & 2.830 \\
+%Cd& 0.530 & 17.10 & 3.160 &Na\footnotemark[5]
+%& 0.760 & 2.110 & 3.120 \\
+%Hg& 0.550 & 17.80 & 3.220 &K\footnotemark[5]
+%&  1.120 & 2.620 & 3.480 \\
+%Al& 0.230 & 15.80 & 3.240 &Rb\footnotemark[3]
+%& 1.330 & 2.800 & 3.590 \\
+%Ga& 0.310 & 16.70 & 3.330 &Cs\footnotemark[4]
+%& 1.420 & 3.030 & 3.740 \\
+%In& 0.460 & 18.40 & 3.500 &Ba\footnotemark[5]
+%& 0.960 & 2.460 & 3.780 \\
+%Tl& 0.480 & 18.90 & 3.550 & & & & \\
+%\end{tabular}
+%\end{ruledtabular}
+%\footnotetext[1]{Here's the first, from Ref.~\onlinecite{feyn54}.}
+%\footnotetext[2]{Here's the second.}
+%\footnotetext[3]{Here's the third.}
+%\footnotetext[4]{Here's the fourth.}
+%\footnotetext[5]{And etc.}
+%\end{table}
+%for an illustration. 
+%
+%All AAPM journals require that the initial citation of
+%figures or tables be in numerical order.
+%\LaTeX's automatic numbering of floats is your friend here:
+%just put each \texttt{figure} environment immediately following 
+%its first reference (\verb+\ref+), as we have done in this example file. 
+%
+%\begin{acknowledgments}
+%We wish to acknowledge the support of the author community in using
+%REV\TeX{}, offering suggestions and encouragement, testing new versions,
+%\dots.
+%\end{acknowledgments}
+
+\appendix
+
+\section{Appendixes}
+
+\section{Model for Token Buyback} \label{appA}
+
+\section{Inflation Dynamics} \label{appB}
+%
+Saage DAO reward the stakers with an initial inflation $\mathcal{I}_0 = 50\%$ APR, and defines the time to half the inflation rate to be $\mathcal{T}_{1/2} = 3$ years. We define the relative inflation rate (token inflation + betting rebates) $i_0=\frac{\mathcal{I}_0}{\mathcal{M}_0}$. At genesis we define, $\mathcal{I}_0 = \mathcal{M}_0$, which gives us the maximum number of tokens which that will ever be created: 
+
+\begin{equation}
+\begin{array}{ll}
+\mathcal{I}(t) = \mathcal{I}_0 = 3^ {- t/\mathcal{T}_{1/2}} = \mathcal{I}_0 [\ exp (- ln 3 \frac{t}{\mathcal{T}_{1/2}})]\ 
+\end{array} \right.
+\label{I1}
+\end{equation}
+
+The token supply can be related to the inflation at a given time $t$ as:
+
+\begin{equation}
+\begin{array}{ll}
+\mathcal{M}(t) = \mathcal{M}_0 + \int_0^t \mathcal{I}(t) dt = \mathcal{M}_0+ \frac{\mathcal{I}_0\mathcal{T}^{1/2}}{ln 3}[\ 1 - 3^{\frac{− t}{\mathcal{T}_{1/2}}} ]\ 
+\end{array} \right.
+\label{I2}
+\end{equation}
+
+\begin{equation}
+\begin{array}{ll}
+\mathcal{M}_{max} = \mathcal{M}_0 (1 + \frac{i_0\mathcal{T}_{1/2}}{ln 3} ) \approx 3.73 \mathcal{M}_0 
+\end{array} \right.
+\label{I3}
+\end{equation}
+where $\mathcal{M}_0$ is initial number of tokens. $\mathcal{M}(t)$ is the current token supply with $\mathcal{M}(0) = \mathcal{M}_0$ and $dt$ can be equal to 1 day. 
+Saage ecosystem implements a stability mechanism to adjust the inflation using $\mathcal{T}^{*}_{1/2}$ = $\mathcal{T}_{1/2}/\beta$ , where $\beta$ is the mean staking parameter.
+
+\begin{equation}
+\begin{array}{ll}
+\mathcal{M}(t) = \mathcal{M}_0 + \int_0^t \mathcal{I}(t) dt = \mathcal{M}_0  \left(\ 1 + \frac{\mathcal{I}_0\mathcal{T}^{*}_{1/2}\beta}{ln 3}[\ 1 - 3^{\frac{− t}{\mathcal{T}_{1/2}}} ]\ \right)\
+\end{array} \right.
+\label{I5}
+\end{equation}
+
+%To start the appendixes, use the \verb+\appendix+ command.
+%This signals that all following section commands refer to appendixes
+%instead of regular sections. Therefore, the \verb+\appendix+ command
+%should be used only once---to set up the section commands to act as
+%appendixes. Thereafter normal section commands are used. The heading
+%for a section can be left empty. For example,
+%\begin{verbatim}
+%\appendix
+%\section{}
+%\end{verbatim}
+%will produce an appendix heading that says ``APPENDIX A'' and
+%\begin{verbatim}
+%\appendix
+%\section{Background}
+%\end{verbatim}
+%will produce an appendix heading that says ``APPENDIX A: BACKGROUND''
+%(note that the colon is set automatically).
+%
+%If there is only one appendix, then the letter ``A'' should not
+%appear. This is suppressed by using the star version of the appendix
+%command (\verb+\appendix*+ in the place of \verb+\appendix+).
+%
+%\section{A little more on appendixes}
+%
+%Observe that this appendix was started by using
+%\begin{verbatim}
+%\section{A little more on appendixes}
+%\end{verbatim}
+%
+%Note the equation number in an appendix:
+%\begin{equation}
+%E=mc^2.
+%\end{equation}
+%
+%\subsection{\label{app:subsec}A subsection in an appendix}
+%
+%You can use a subsection or subsubsection in an appendix. Note the
+%numbering: we are now in Appendix~\ref{app:subsec}.
+%
+%\subsubsection{\label{app:subsubsec}A subsubsection in an appendix}
+%Note the equation numbers in this appendix, produced with the
+%subequations environment:
+%\begin{subequations}
+%\begin{eqnarray}
+%E&=&mc, \label{appa}
+%\\
+%E&=&mc^2, \label{appb}
+%\\
+%E&\agt& mc^3. \label{appc}
+%\end{eqnarray}
+%\end{subequations}
+%They turn out to be Eqs.~(\ref{appa}), (\ref{appb}), and (\ref{appc}).
+
+\nocite{*}
+\bibliography{aapmsamp}% Produces the bibliography via BibTeX.
+
+\end{document}
+%
+% ****** End of file aapmsamp.tex ******
