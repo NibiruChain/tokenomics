@@ -5,11 +5,11 @@ Description: Insights on the Matrix protocol taken from the official whitepaper.
 
 ## What is the Matrix protocol?
 
-Matrix is a capital efficient, decentralized protocol for creating stable crypto assets that can be traded on the blockchain. It allows **stable seekers** to swap between collateral and stable assets.
+Matrix is a capital efficient, decentralized protocol for creating stable crypto assets that can be traded on the blockchain using the Cosmos SDK. It allows **stable seekers** to swap between collateral and stable assets.
 
 ## NEO Token - The Cosmos-native stablecoin
 
-Matrix will mint **NEO**, a stablecoin backed by collateral in the form of OSMO and ATOM. Eventually, the protocol will allow for other tokens to be used as collateral from a governance-made whitelist. These tokens are priced at [Chainlink](https://chain.link/) oracle value and swap with a minimal amount of transaction fees, which go to the protocol. Collateral can always be swapped with its corresponding stablecoin at oracle value.
+Matrix will mint **NEO**, a stablecoin backed by collateral in the form of OSMO. Eventually, the protocol will allow for other tokens to be used as collateral from a governance-made whitelist. These tokens are priced at [Chainlink](https://chain.link/) oracle value and swap with a minimal amount of transaction fees, which go to the protocol. Collateral can always be swapped with NEO at oracle value.
 
 <img src="img/user-oracle-matrix.png">
 
@@ -19,16 +19,25 @@ Stables assets are minted whenever whitelisted collateral is sent to the protoco
 
 ### Leverage Agents
 
-**Leverage Agents (LAs)** insure the protocol against drops in collateral price, making sure that there are always reserves for stable holders. Similar to the liquidity positions of Uniswap, liquidity agent positions are implemented as NFTs. These positions are transferable between addresses and cover fixed amounts of liquidity ($c_{\text{cover}}$).
+**Leverage Agents (LAs)** insure the protocol against drops in collateral price, making sure that there are always reserves for stable holders. Similar to the liquidity positions of Uniswap, liquidity agent positions are implemented as NFTs. These positions are transferable between addresses and cover fixed amounts of liquidity ($c_{\text{matrix}}$).
 
 **LAs choose how much collateral they want to cover** for stable seekers and essentially take a long investment on the underlying collateral. A leverage agent's position can be redeemed in the form of collateral (token) it covers based on the following equation:
 
 $$
-\text{position\_value} = c_{\text{cover}}\cdot \left( 1 - \frac{\text{price\_initial}}{\text{price\_current}}  \right) + c_{LA},
+\text{position\_value} = c_{\text{matrix}}\cdot \left( 1 - \frac{\text{price\_initial}}{\text{price\_current}}  \right) + c_{LA},
 $$
-where $c_{LA}$ is the collateral the agent brings to the protocol, and $c_{\text{cover}}$ is the amount of collateral the agent chooses to cover.
+where $c_{LA}$ is the collateral the agent brings to the protocol, and $c_{\text{matrix}}$ is the amount of collateral the agent chooses to cover.
 
-Investments from LAs absorb the volatility of the amount they are backing by enabling the protocol to use their collateral in the case of price drops, effectively reducing the exposure of Matrix to price variations. From the perspective of an agent, one gets great earnings in the case of a price increase and suffers substantial losses if price decreases. In this way, a leverage agent has a long, leveraged position with multiplier,  $\frac{ c_{\text{cover}} + c_{LA} }{ c_{\text{cover}} }$.
+Investments from LAs absorb the volatility of the amount they are backing by enabling the protocol to use their collateral in the case of price drops, effectively reducing the exposure of Matrix to price variations. From the perspective of an agent, one gets great earnings in the case of a price increase and suffers substantial losses if price decreases. In this way, a leverage agent has a long, leveraged position with multiplier,  $\dfrac{ c_{\text{matrix}} + c_{LA} }{ c_{\text{matrix}} }$.
+
+This means that an LA that brings $c_{LA}=10$ OSMO and covers $c_{\text{matrix}}=60$ OSMO takes the variation of $c_{\text{matrix}}$. If the price of OSMO goes from \$10 to \$12, the LA earns a return of 
+
+$$c_{\text{matrix}}\cdot \left( 1 - \frac{\text{price\_initial}}{\text{price\_current}}  \right) + c_{LA} = 10 + 60\left(1 - \frac{10}{12}\right) = \boxed{20\text{ OMSO} }.$$
+
+And if the LA exits the position when price instead decreases from \$10 to 
+
+$$ \dfrac{\text{price\_initial}}{\text{leverage\_multiplier}} = \$10\cdot \frac{ 60 }{60 + 10} =  \$8.57, $$
+the protocol keeps $c_{LA}$ to stay collateralized and the LA loses the investment.
 
 ##### Constraints on leverage agents:
 
@@ -44,13 +53,13 @@ In the case the protocol's stable seekers are entirely covered by LAs, there wou
 There are several revenue streams for providing liquidity as an Insurance Agent:
 1. **Transaction fees**: In proportion to their position size, IAs receive a cut of the transaction fees when stablecoins are minted and burned.
 2. **Staking**: IAs can stake their liquidity positions to receive governance tokens.
-3. **Reserve pool investments:** Stable seekers bring collateral to the Matrix protocol and this will often result in an under-utilization of the assets. In similar fashion to how the surplus from [Curve pools](https://resources.curve.fi/base-features/understanding-curve) are used on lending protocols like Compound and Aave or other yield aggregation protocols, **Matrix will automatically transfer some its extra reserves into trading strategies** on platforms like Umee and Axelar. IAs earn interest from this. 
+3. **Reserve pool investments:** Stable seekers bring collateral to the Matrix protocol and this will often result in an under-utilization of the assets. In similar fashion to how the surplus from Curve pools are used on yield aggregation protocols or lending protocols like Compound and Aave, **Matrix will automatically invest some its extra reserves** on platforms like Umee and Osmosis. IAs earn interest from this too. 
 
-For example, suppose the protocol owns 15 OSMO (collateral), of which 10 comes from stable seekers and 5 comes from liquidity providers. Insurance Agents can earn interest from all of this. This interest depends on what proportion of the protocol funds are invested in strategies and what proportion of the liquidity is supplied by other IAs.
+Suppose the protocol owns 15 OSMO (collateral), of which 10 comes from stable seekers and 5 comes from liquidity providers. Insurance Agents can earn interest from all of this. This interest depends on what proportion of the protocol funds are invested in strategies and what proportion of the liquidity is supplied by other IAs.
 
 To be clear, IAs are in competition with each other. The less liquidity there is coming from IAs in the protocol, the more a single agent earns from each revenue stream: transaction fees, staking governance tokens, and investment yields.
 
-An IA providing OSMO/ATOM liquidity for the NEO stablecoin would receive sanOSMO, a tokens that quantify the rewards. By issuing sanOSMO, IAs can earn interest and rewards through the token's underlying Osmosis exchange rate, which increases as (1) transaction fees collect for the pool and (2) as interest is collected from lent collateral.
+An IA providing OSMO liquidity for the NEO stablecoin receives sNEO, a tokens that quantify the rewards. sNEO represents the "share" of pool for which the IA provides liquidity. When issued sNEO, IAs can interest/rewards through the token's underlying exchange rate, which increases as (1) transaction fees collect for the pool and (2) as interest is collected from collateral being lent.
 
 **Risks for Insurance Agents**: The risk for an Insurance Agent is incurring slippage when the protocol is under-collateralized, i.e. not being able to reclaim assets with the same value they put in.  
 
@@ -65,9 +74,17 @@ Matrix gets its liquidity from two places: LPs and the **Insurance Fund (IF)**, 
 $$\Xi^{-1} = \frac{\text{LP} - \text{IF}}{\text{LP} + \text{IF}},$$
 
 where $LP$ and $IF$ are the asset contributions from the liquidity providers and Insurance Fund, respectively. The value of $\Xi^{-1}$ determines the state of the protocol. For example, 
+<!-- 
 - **Optimal**, $\Xi^{-1} = \frac{1}{3}$: The desired state, where 67% of the assets are provided by LPs and 33% are provided by the IF. The rewards from the protocol are split with the same proportions.
 - **Under-utilized**, $\Xi^{-1}=0$ : An unsafe state. Here, both LPs and the IF provide 50% of the assets each. 100% of the rewards go to the IF (i.e. no rewards go to LPs). If the protocol is under-utilized, stakers have no incentive to validate the block-chain.
-- **Inefficient**, $\Xi^{-1}=1$: LPs provide 100% of the assets and receive 100% of the protocol rewards. When the protocol becomes inefficient, capital and rewards are re-allocated by the DAO between LPs and the IF to bring about additional investment yields, moving the protocol closer to optimality.
+- **Inefficient**, $\Xi^{-1}=1$: LPs provide 100% of the assets and receive 100% of the protocol rewards. When the protocol becomes inefficient, capital and rewards are re-allocated by the DAO between LPs and the IF to bring about additional investment yields, moving the protocol closer to optimality. 
+-->
+
+| State | $\Xi^{-1}$ | Description |
+| :--: | :--: | -- | 
+| **Optimal** | $\frac{1}{3}$ | The desired state, where 67% of the assets are provided by LPs and 33% are provided by the IF. The rewards from the protocol are split with the same proportions. |
+| **Under-utilized** | $0$ | An unsafe state. Here, both LPs and the IF provide 50% of the assets each. 100% of the rewards go to the IF (i.e. no rewards go to LPs). If the protocol is under-utilized, stakers have no incentive to validate the block-chain. |
+| **Inefficient** | $1$ | LPs provide 100% of the assets and receive 100% of the protocol rewards. When the protocol becomes inefficient, capital and rewards are re-allocated by the DAO between LPs and the IF to bring about additional investment yields, moving the protocol closer to optimality. |
 
 ## Partners (ask if this should be included)
 - Osmosis

@@ -2,7 +2,7 @@
 # Matrix DAO - vNEO Tokenomics
 
 Tags: Blockchain, Cryptocurrency, Cosmos, Stablecoin, Tokenomics 
-Description: "Real g's move in silence like lasagna".
+Description: ""
 
 **Matrix DAO** will be responsible for deploying new stablecoins, accepting new collateral types for a given stablecoin and protocol upgrades and integrations. 
 
