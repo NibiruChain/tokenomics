@@ -1,18 +1,18 @@
-# matrix-blog
+# matrix-research
 
-| Blog posts |
-| --- | 
-| [Matrix Protocol][blog-matrix] |
-| [NEO Tokenomics][blog-tokenomics] |
 
-[blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-matrix.md
-[blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-tokenomics.md
+### [Matrix Protocol (Blog)][blog-matrix]
+
+### [NEO Tokenomics (Blog)][blog-tokenomics]
+
+[blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-matrix.pdf
+[blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-tokenomics.pdf
 
 ### Token Release
 
 | Split (%) | Group | Description |  
 | :---: | :----: | ---- | 
-| 40 | Community | gNEO Liquidity Mining Program on Osmosis |
+| 40 | Community | vNEO Liquidity Mining Program on Osmosis |
 | 20 | Community | Treasury controlled through Matrix DAO | 
 | 15 | Community | Strategic partners, project advisors, and community members that contribute a lot to the protocol   | 
 | 15 | Core | Core Matrix Team | 
