@@ -3,10 +3,10 @@
 
 ### [Matrix Protocol (Blog)][blog-matrix]
 
-### [NEO Tokenomics (Blog)][blog-tokenomics]
+### [MTRX Tokenomics (Blog)][blog-tokenomics]
 
-[blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-matrix.pdf
-[blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-tokenomics.pdf
+[blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-posts/blog-matrix.pdf
+[blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-posts/blog-tokenomics.pdf
 
 ### Token Release
 
