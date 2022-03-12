@@ -12,7 +12,7 @@
 
 | Split (%) | Group | Description |  
 | :---: | :----: | ---- | 
-| 40 | Community | vNEO Liquidity Mining Program on Osmosis |
+| 40 | Community | MTRX Liquidity Mining Program on Osmosis |
 | 20 | Community | Treasury controlled through Matrix DAO | 
 | 15 | Community | Strategic partners, project advisors, and community members that contribute a lot to the protocol   | 
 | 15 | Core | Core Matrix Team | 
