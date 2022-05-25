@@ -5,8 +5,8 @@
 
 ### [MTRX Tokenomics (Blog)][blog-tokenomics]
 
-[blog-matrix]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-posts/blog-matrix.pdf
-[blog-tokenomics]: https://github.com/MatrixDao/matrix-blog/blob/main/blog-posts/blog-tokenomics.pdf
+[blog-matrix]: https://github.com/NibiruChain/matrix-blog/blob/main/blog-posts/blog-matrix.pdf
+[blog-tokenomics]: https://github.com/NibiruChain/matrix-blog/blob/main/blog-posts/blog-tokenomics.pdf
 
 ### Token Release
 
