@@ -94,18 +94,6 @@ Funding rate is designed to keep the retail traders from running away
 
 ---
 
-## Matrix Meeting 
-
-The setup of the legal entities is the reason for delay. Everyone will be pro-rated. If people need liquidity more urgently in order to keep momentum, contact Vector Sigma / Optimus Prime. 
-
-
-
-
-
-
-
----
-
 *Disclaimer: This content is provided for informational purposes only, and should not be relied upon as legal, business, investment, or tax advice. You should consult your own advisers as to those matters. References to any securities or digital assets are for illustrative purposes only, and do not constitute an investment recommendation or offer to provide investment advisory services. This content is not directed at nor intended for use by any investors or prospective investors, and may not under any circumstances be relied upon when making investment decisions.*
 
 
