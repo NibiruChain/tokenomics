@@ -91,7 +91,7 @@ class TokenomicsPlotterV1:
         """
 
         # Set allocation for "Team"
-        genesis_cliff_categories: List[str] = ["Team"]
+        genesis_cliff_categories: List[str] = ["Treasury"]
         category_vest_map: Dict[str, np.ndarray] = {
             category: np.linspace(
                 start=self.total_supply * self.category_pct_map[category] * 0.25,
@@ -108,7 +108,7 @@ class TokenomicsPlotterV1:
         )
 
         # Set allocation for other linear vesters
-        four_year_vest_categories: List[str] = ["Treasury", "Private", "Seed"]
+        four_year_vest_categories: List[str] = ["Team", "Private", "Seed"]
         for category in four_year_vest_categories:
             category_vest_map[category] = np.linspace(
                 start=self.total_supply * self.category_pct_map[category] * 0.25,
@@ -118,7 +118,7 @@ class TokenomicsPlotterV1:
 
         ones_tail = np.ones(num_time_points // 2, dtype=float)
         for category, head in category_vest_map.items():
-            if category != "Team":
+            if category not in genesis_cliff_categories:
                 zeros_before_head = np.zeros(num_time_points // 8, dtype=float)
                 head = np.concatenate([zeros_before_head, head])
                 category_vest_map[category] = np.concatenate(
@@ -258,7 +258,7 @@ class TokenomicsPlotterV1:
         plot_fname = "token_release_area"
         if save:
             for save_type in save_types:
-                tokenomics.save_figure(
+                save_figure(
                     fig=fig, plot_fname=plot_fname, file_type=save_type
                 )
         return fig
