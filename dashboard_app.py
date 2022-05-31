@@ -1,5 +1,6 @@
-#%%
+# mypy: ignore_missing_imports = True
 import os
+import dataclasses
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -8,10 +9,29 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Tuple
+
+# FONT_FAMILY: str = "IBM Plex Mono"
+FONT_FAMILY: str = "Consolas"
+# FONT_FAMILY: str = "Courier New"
 
 
-class GenericTokenDistributionPlotter:
+@dataclasses.dataclass
+class AllocationGroup:
+    name: str
+    pct: float  # e.g. 20 for 20%
+    color: str
+
+
+def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
+    if not os.path.exists(os.path.join("plots")):
+        os.mkdir(os.path.join("plots"))
+
+    if file_type == "html":
+        fig.write_html(os.path.join("plots", f"{plot_fname}.{file_type}"))
+    else:
+        fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
+
 
     token_amount_df: pd.DataFrame
     token_cumulative_distrib_df: pd.DataFrame
