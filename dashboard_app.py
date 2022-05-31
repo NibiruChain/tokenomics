@@ -314,25 +314,15 @@ class TokenomicsPlotterV1:
         return fig
 
 
-    @staticmethod
-    def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
-        if not os.path.exists(os.path.join("plots")):
-            os.mkdir(os.path.join("plots"))
-
-        if file_type == "html":
-            fig.write_html(os.path.join("plots", f"{plot_fname}.{file_type}"))
-        else:
-            fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
-
-
-class TokenDistributionPlotter:
+class TokenomicsPlotterV0:
+    """Plotter from Feb., 2022"""
 
     token_supply_df: pd.DataFrame
     token_distrib_df: pd.DataFrame
 
     def __init__(self) -> None:
-        df = pd.read_csv(os.path.join("data", "token_distribution.csv"))
-        df.month = df.month.apply(self.parse_month)
+        df: pd.DataFrame = pd.read_csv(os.path.join("data", "token_distribution.csv"))
+        df.month = df.month.apply(self.parse_date_column)
 
         token_supply_columns: List[str] = ["month", "total_supply", "pct_max_supply"]
         self.token_supply_df = df[token_supply_columns].copy(deep=True)
@@ -355,22 +345,12 @@ class TokenDistributionPlotter:
         self.token_distrib_df = self.token_distrib_df.set_index("month")
 
     @staticmethod
-    def parse_month(month: str) -> pd.Timestamp:
-        month = month.lstrip("(").rstrip(")")
-        numbers_in_month: List[int] = [int(num) for num in month.split(",")]
-        year, month, day = numbers_in_month[:3]
-        month: str = f"{year}-{month}-{day}"
-        return pd.Timestamp(month)
-
-    @staticmethod
-    def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
-        if not os.path.exists(os.path.join("plots")):
-            os.mkdir(os.path.join("plots"))
-
-        if file_type == "html":
-            fig.write_html(os.path.join("plots", f"{plot_fname}.{file_type}"))
-        else:
-            fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
+    def parse_date_column(date: str) -> pd.Timestamp:
+        date = date.lstrip("(").rstrip(")")
+        numbers_in_date: List[int] = [int(num) for num in date.split(",")]
+        year, month, day = numbers_in_date[:3]
+        date = f"{year}-{month}-{day}"
+        return pd.Timestamp(date)
 
     def plot_token_release_schedule_line(
         self,
@@ -389,7 +369,9 @@ class TokenDistributionPlotter:
         plot_fname = "token_release_schedule"
         if save:
             for save_type in save_types:
-                self.save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(
+                    fig=fig, plot_fname=plot_fname, file_type=save_type
+                )
 
         return fig
 
@@ -399,7 +381,6 @@ class TokenDistributionPlotter:
         df = self.token_distrib_df
         x = df.index  # dates
         fig = go.Figure()
-        breakpoint()
         fig.add_trace(x=x, y=df)
 
         return fig
@@ -415,9 +396,9 @@ class TokenDistributionPlotter:
         names: List[str] = list(genesis_distrib.index)
         names = [s.upper() for s in names]
         values = genesis_distrib.values
-        genesis_distrib: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
-        genesis_distrib = genesis_distrib[genesis_distrib != 0]
-        print(f"Genesis supply: {genesis_distrib.sum()}")
+        plot_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
+        plot_df = plot_df[plot_df != 0]
+        print(f"Genesis supply: {plot_df.sum()}")
 
         # Append "Category" column
         category_map: dict[str, str] = dict(
@@ -432,20 +413,20 @@ class TokenDistributionPlotter:
             STAKING_AIRDROP="Community",
             IDO="Early Backers",
         )
-        genesis_distrib["Category"] = genesis_distrib.Group.apply(
-            lambda g: category_map[g]
-        )
-        genesis_distrib["Category_sum"] = genesis_distrib.Category.apply(
-            lambda c: genesis_distrib.Tokens[genesis_distrib.Category == c].sum()
+        plot_df["Category"] = plot_df.Group.apply(lambda g: category_map[g])
+        plot_df["Category_sum"] = plot_df.Category.apply(
+            lambda c: plot_df.Tokens[plot_df.Category == c].sum()
         )
 
         if not pie_type in ["pie", "sunburst"]:
             raise ValueError(
                 f"Invalid 'pie_type': {pie_type}." " Must be pie or sunburst"
             )
+
+        fig: go.Figure
         if pie_type == "pie":
-            fig: go.Figure = px.pie(
-                data_frame=genesis_distrib,
+            fig = px.pie(
+                data_frame=plot_df,
                 values="Tokens",
                 names="Group",
                 color="Group",
@@ -455,8 +436,8 @@ class TokenDistributionPlotter:
             # fig.update_traces(textinfo='percent+label', textposition='inside')
             fig.update_traces(textinfo="percent", textposition="outside")
         if pie_type == "sunburst":
-            fig: go.Figure = px.sunburst(
-                data_frame=genesis_distrib,
+            fig = px.sunburst(
+                data_frame=plot_df,
                 path=["Category", "Group"],
                 values="Tokens",
                 color_discrete_sequence=px.colors.qualitative.Safe,
@@ -472,7 +453,9 @@ class TokenDistributionPlotter:
         plot_fname: str = "genesis_supply"
         if save:
             for save_type in save_types:
-                self.save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(
+                    fig=fig, plot_fname=plot_fname, file_type=save_type
+                )
         return fig
 
     def plot_final_token_supply(
@@ -486,8 +469,8 @@ class TokenDistributionPlotter:
         names: List[str] = list(final_distrib.index)
         names = [s.upper() for s in names]
         values = final_distrib.values
-        # 'final_distrib' columns: Group, Tokens, Category, Category_sum
-        final_distrib: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
+        # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
+        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
 
         # Append "Category" column
         category_map: dict[str, str] = dict(
@@ -502,18 +485,21 @@ class TokenDistributionPlotter:
             STAKING_AIRDROP="Community",
             IDO="Early Backers",
         )
-        final_distrib["Category"] = final_distrib.Group.apply(lambda g: category_map[g])
-        final_distrib["Category_sum"] = final_distrib.Category.apply(
-            lambda c: final_distrib.Tokens[final_distrib.Category == c].sum()
+        final_distrib_df["Category"] = final_distrib_df.Group.apply(
+            lambda g: category_map[g]
+        )
+        final_distrib_df["Category_sum"] = final_distrib_df.Category.apply(
+            lambda c: final_distrib_df.Tokens[final_distrib_df.Category == c].sum()
         )
 
         if not pie_type in ["pie", "sunburst"]:
             raise ValueError(
                 f"Invalid 'pie_type': {pie_type}." " Must be pie or sunburst"
             )
+        fig: go.Figure
         if pie_type == "pie":
-            fig: go.Figure = px.pie(
-                data_frame=final_distrib,
+            fig = px.pie(
+                data_frame=final_distrib_df,
                 values="Tokens",
                 names="Group",
                 color="Group",
@@ -523,8 +509,8 @@ class TokenDistributionPlotter:
             # fig.update_traces(textinfo='percent+label', textposition='inside')
             fig.update_traces(textinfo="percent", textposition="outside")
         if pie_type == "sunburst":
-            fig: go.Figure = px.sunburst(
-                data_frame=final_distrib,
+            fig = px.sunburst(
+                data_frame=final_distrib_df,
                 path=["Category", "Group"],
                 values="Tokens",
                 color_discrete_sequence=px.colors.qualitative.Safe,
@@ -540,7 +526,9 @@ class TokenDistributionPlotter:
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                self.save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(
+                    fig=fig, plot_fname=plot_fname, file_type=save_type
+                )
         return fig
 
 
