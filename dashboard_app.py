@@ -33,6 +33,15 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
 
 
+class TokenomicsPlotterV1:
+    """Plotter for Tokenomics v1 (2022-05-29)
+    
+    Methods: 
+        setup_token_distrib_area
+        plot_token_distrib_area
+        plot_final_token_supply
+    """
+
     token_amount_df: pd.DataFrame
     token_cumulative_distrib_df: pd.DataFrame
 
@@ -42,43 +51,74 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         "Treasury": 0.04,
         "Private": 0.12,
         "Seed": 0.07,
-        "Community": 0.6,
+        "Community": 0.60,
     }
+    category_order: List[str]
 
     colors: List[str] = [
-        "#" + c for c in 
-        ["005d5d", "9f1853", "570408", "6929c4", "1192e8"]
-        ]
+        "#" + c for c in ["005d5d", "9f1853", "570408", "6929c4", "1192e8"]
+    ]
     category_color_map: Dict[str, str]
 
     def __init__(self):
         self.category_color_map = {
-            cat: self.colors[idx] for idx, cat in enumerate(self.category_pct_map)
+            category: self.colors[idx]
+            for idx, category in enumerate(self.category_pct_map)
         }
-        ...
+        self.category_order = None
 
-    def plot_token_distrib_area(
-        self, 
-        save: bool = False,
-        save_types: List[str] = ["svg"],
-        ) -> go.Figure:
+    def setup_token_distrib_area(
+        self,
+        num_time_points: int = int(1e5),
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """_summary_
 
-        time_points = int(1e5)
+        Args:
+            num_time_points (int, optional): _description_. Defaults to int(1e5).
 
-        four_year_vest_cats: List[str] = ["Team", "Treasury", "Private", "Seed"]
+        Returns:
+            Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+                category_vest_map, eight_year_vest_map
+        """
 
-        four_year_vest_map: Dict[str, np.ndarray] = {
-            cat: np.linspace(
-                start=0,
-                stop=self.total_supply * self.category_pct_map[cat],
-                num=time_points // 2,
+        # Set allocation for "Team"
+        genesis_cliff_categories: List[str] = ["Team"]
+        category_vest_map: Dict[str, np.ndarray] = {
+            category: np.linspace(
+                start=self.total_supply * self.category_pct_map[category] * 0.25,
+                stop=self.total_supply * self.category_pct_map[category],
+                num=num_time_points * 4 // 8,
             )
-            for cat in four_year_vest_cats
+            for category in genesis_cliff_categories
         }
-        ones_tail = np.ones(time_points // 2, dtype=float)
-        for cat, head in four_year_vest_map.items():
-            four_year_vest_map[cat] = np.concatenate([head, ones_tail * head[-1]])
-        assert all([arr.shape[0] == time_points for arr in four_year_vest_map.values()])
+        ones_tail = np.ones(num_time_points // 2, dtype=float)
+        for category, head in category_vest_map.items():
+            category_vest_map[category] = np.concatenate([head, ones_tail * head[-1]])
+        assert all(
+            [arr.shape[0] == num_time_points for arr in category_vest_map.values()]
+        )
+
+        # Set allocation for other linear vesters
+        four_year_vest_categories: List[str] = ["Treasury", "Private", "Seed"]
+        for category in four_year_vest_categories:
+            category_vest_map[category] = np.linspace(
+                start=self.total_supply * self.category_pct_map[category] * 0.25,
+                stop=self.total_supply * self.category_pct_map[category],
+                num=num_time_points * 3 // 8,
+            )
+
+        ones_tail = np.ones(num_time_points // 2, dtype=float)
+        for category, head in category_vest_map.items():
+            if category != "Team":
+                zeros_before_head = np.zeros(num_time_points // 8, dtype=float)
+                head = np.concatenate([zeros_before_head, head])
+                category_vest_map[category] = np.concatenate(
+                    [head, ones_tail * head[-1]]
+                )
+
+        assert all(
+            [arr.shape[0] == num_time_points for arr in category_vest_map.values()]
+        )
 
         """
         >>> yp
@@ -90,7 +130,6 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         100.0
         """
         # Juno opts for 30-17-9-6 over 12 phases
-        eight_year_vest_cats: List[str] = ["Community"]
         incentive_phases: List[float] = [
             17.35483871,
             12.09677419,
@@ -111,30 +150,47 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         ]
         community_allocation = []
         start = 0
-        category: str = "Community"
+        category = "Community"
         for idx, phase_pct in enumerate(np.array(incentive_phases).cumsum()):
-            stop = (phase_pct / 100) * self.total_supply * self.category_pct_map[category]
+            stop = (
+                (phase_pct / 100) * self.total_supply * self.category_pct_map[category]
+            )
             community_allocation.append(
                 np.linspace(
                     start,
                     stop=stop,
-                    num=int(time_points / 16),
+                    num=int(num_time_points / 16),
                 )
             )
             start = stop
         eight_year_vest_map = {category: np.concatenate(community_allocation)}
         assert all(
-            [arr.shape[0] == time_points for arr in eight_year_vest_map.values()]
+            [arr.shape[0] == num_time_points for arr in eight_year_vest_map.values()]
         )
 
-        fyvm, eyvm = four_year_vest_map, eight_year_vest_map
+        return category_vest_map, eight_year_vest_map
 
-        time_axis = np.linspace(start=0, stop=8, num=time_points)
+    def plot_token_distrib_area(
+        self,
+        save: bool = False,
+        save_types: List[str] = ["svg"],
+    ) -> go.Figure:
+        """_summary_
 
-        # x = ["a", "b", "c", "d"]
+        Args:
+            save (bool, optional): _description_. Defaults to False.
+            save_types (List[str], optional): _description_. Defaults to ["svg"].
+
+        Returns:
+            go.Figure: _description_
+        """
+        cvm: Dict[str, np.ndarray]
+        eyvm: Dict[str, np.ndarray]
+        cvm, eyvm = self.setup_token_distrib_area()
+
+        num_time_points: int = [v for v in cvm.values()][0].size
+        time_axis = np.linspace(start=0, stop=8, num=num_time_points)
         x = time_axis
-        colors = self.colors
-
         layout = go.Layout(
             {
                 "showlegend": True,
@@ -144,69 +200,83 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         )
         fig = go.Figure(layout=layout)
 
-        for idx, cat in enumerate(fyvm):
-            fig.add_trace(
-                go.Scatter(
-                    x=x,
-                    y=fyvm[cat],
-                    hoverinfo="x+y",
-                    mode="lines",
-                    line=dict(width=0.5, color=colors[idx]),
-                    stackgroup="one",  # define stack group
-                    name=cat
-                )
-            )
+        self.category_order = []
+        for idx, category in enumerate(eyvm):
+            self.category_order.append(category)
 
-        for new_idx, cat in enumerate(eyvm):
-            new_idx = idx + new_idx + 1
-            assert new_idx <= len(colors)
+            assert idx <= len(self.colors)
             fig.add_trace(
                 go.Scatter(
                     x=x,
-                    y=eyvm[cat],
+                    y=eyvm[category],
                     hoverinfo="x+y",
                     mode="lines",
-                    line=dict(width=0.5, color=colors[new_idx]),
+                    line=dict(width=0.5, color=self.category_color_map[category]),
                     stackgroup="one",
-                    name=cat
+                    name=category.upper(),
                 ),
             )
 
+        for new_idx, category in enumerate(cvm):
+            self.category_order.append(category)
+            new_idx = idx + new_idx + 1
+            fig.add_trace(
+                go.Scatter(
+                    x=x,
+                    y=cvm[category],
+                    hoverinfo="x+y",
+                    mode="lines",
+                    line=dict(width=0.5, color=self.category_color_map[category]),
+                    stackgroup="one",  # define stack group
+                    name=category.upper(),
+                )
+            )
+
+        title: str = "NIBI’s 8-year token release schedule"
         fig.update_layout(
-            font_family="IBM Plex Mono",
-            # font_family="Consolas",
-            # font_family="Courier New",
+            title=title,
+            template="none",
+            font_family=FONT_FAMILY,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+            ),
         )
 
         plot_fname = "token_release_area"
         if save:
             for save_type in save_types:
-                self.save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                tokenomics.save_figure(
+                    fig=fig, plot_fname=plot_fname, file_type=save_type
+                )
         return fig
 
     def plot_final_token_supply(
         self, save: bool = False, save_types: List[str] = ["svg"], pie_type: str = "pie"
     ) -> go.Figure:
 
-        title: str = "Cumulative token distribution 8 years after protocol launch"
+        title: str = "NIBI’s token distribution at maturity, 8-years after launch"
         subtitle: str = ""
-        # subtitle: str = "Cumulative token distribution 8 years after protocol launch"
 
         final_distrib: Dict[str, float] = self.category_pct_map
         names: List[str] = list(final_distrib.keys())
         names = [s.upper() for s in names]
         values = [v for v in final_distrib.values()]
 
-        # 'final_distrib' columns: Group, Tokens, Category, Category_sum
-        final_distrib: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
+        # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
+        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
 
         if not pie_type in ["pie", "sunburst"]:
             raise ValueError(
                 f"Invalid 'pie_type': {pie_type}." " Must be pie or sunburst"
             )
+        fig: go.Figure
         if pie_type == "pie":
-            fig: go.Figure = px.pie(
-                data_frame=final_distrib,
+            fig = px.pie(
+                data_frame=final_distrib_df,
                 values="Tokens",
                 names="Group",
                 color="Group",
@@ -216,8 +286,8 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
             # fig.update_traces(textinfo='percent+label', textposition='inside')
             fig.update_traces(textinfo="percent", textposition="outside")
         if pie_type == "sunburst":
-            fig: go.Figure = px.sunburst(
-                data_frame=final_distrib,
+            fig = px.sunburst(
+                data_frame=final_distrib_df,
                 path=["Category", "Group"],
                 values="Tokens",
                 color_discrete_sequence=px.colors.qualitative.Safe,
@@ -231,15 +301,16 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
             )
 
         fig.update_layout(
-            font_family="IBM Plex Mono",
-            # font_family="Consolas",
-            # font_family="Courier New",
+            template="none",
+            font_family=FONT_FAMILY,
         )
 
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                self.save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(
+                    fig=fig, plot_fname=plot_fname, file_type=save_type
+                )
         return fig
 
 
