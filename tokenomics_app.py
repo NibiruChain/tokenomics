@@ -1,3 +1,12 @@
+"""
+'tokenomics_app' is script that generates plots most commonly seen in cryptocurrency 
+token economics writeups. 
+
+Classes: 
+    AllocationGroup
+    TokenomicsPlotterV1: Plotter for Tokenomics v1 (2022-05-29)
+    TokenomicsPlotterV0: Plotter from Feb., 2022
+"""
 # mypy: ignore_missing_imports = True
 import os
 import dataclasses
@@ -557,22 +566,20 @@ class CustomPlotter:
 
 
 if __name__ == "__main__":
-    tdp = TokenDistributionPlotter()
+    plotter_v0 = TokenomicsPlotterV0()
+    plotter_v1 = TokenomicsPlotterV1()
     # custom = CustomPlotter()
-    gtdp = GenericTokenDistributionPlotter()
 
     app = dash.Dash()
-    app.layout = html.Div(
-        children=[
-            # dcc.Graph(figure=tdp.plot_token_release_schedule_area()),
-            # dcc.Graph(figure=tdp.plot_token_release_schedule_line(save=True)),
-            # dcc.Graph(figure=tdp.plot_genesis_supply(save=True, pie_type="sunburst")),
-            # dcc.Graph(figure=custom.plot_foo()),
-            dcc.Graph(
-                figure=gtdp.plot_final_token_supply(save=True, pie_type="pie")
-            ),
-            dcc.Graph(figure=gtdp.plot_token_distrib_area(save=True)),
-        ]
-    )
+    figures: List[go.Figure] = [
+        plotter_v1.plot_token_distrib_area(save=True),
+        plotter_v1.plot_token_distrib_area(save=True),
+        plotter_v1.plot_final_token_supply(save=True, pie_type="pie"),
+        # plotter_v0.plot_token_release_schedule_area()),
+        # plotter_v0.plot_token_release_schedule_line(save=True)),
+        # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
+        # custom.plot_foo()),
+    ]
+    app.layout = html.Div(children=[dcc.Graph(figure=figure) for figure in figures])
 
     app.run_server(debug=True, use_reloader=False)
