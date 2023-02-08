@@ -20,15 +20,23 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
+from pkg.const import (TOKEN_SUPPLY_YEARS)
+from pkg import vesting
 
 
 class FontFamily:
+    """An enum class for font families. Not all font families are supported by 
+    plotly dash.
+    """
     IbmPlexMono = "IBM Plex Mono"
     Consolas = "Consolas"
     CourierNew = "Courier New"
+    Main = "Inter"
+    # Main = "DM Sans" # Seems to not be available
 
 
-FONT_FAMILY: str = FontFamily.Consolas
+FONT_FAMILY: str = FontFamily.Main
+"""FONT_FAMILY: Constant for the font family to use while plotting."""
 
 
 @dataclasses.dataclass
@@ -36,9 +44,17 @@ class AllocationGroup:
     name: str
     pct: float  # e.g. 20 for 20%
     color: str
+    vi: vesting.VestingInfo = None
 
 
 def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
+    """Save the given figure to a file.
+
+    Args:
+      fig (go.Figure): Graph object for the plot.
+      plot_fname: File name for the plot.
+      file_type: Ex: "svg", "png", "html".
+    """
     if not os.path.exists(os.path.join("plots")):
         os.mkdir(os.path.join("plots"))
 
@@ -48,8 +64,30 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
 
 
+class Colors:
+    PURPLE = "rgb(100, 80, 194)"
+    SKY_BLUE = "rgb(96, 156, 212)"
+    PINK = "rgb(200, 124, 226)"
+    GOLD = "rgb(213, 175, 96)"
+    GREEN = "rgb(130, 207, 179)"
+
+    LOGO_PINK = "rgb(255, 212, 229)"
+    LOGO_TURQUOISE = "rgb(83, 77, 224)"
+    LOGO_YELLOW = "rgb(255, 243, 204)"
+    LOGO_BLACK = "rgb(7, 0, 19)"
+
+
+class GroupType:
+    TEAM = "Core Contributors"
+    POST_SEED = "Investors (Post-Seed)"
+    SEED = "Investors (Seed)"
+    COMMUNITY = "Community"
+    PUBLIC_SALE = "Public Sale"  # CoinList
+
+
 class PlotterTokenomicsV1:
-    """Plotter for Tokenomics v1 (2022-05-29)
+    """Plotter for Tokenomics v2 (2024-01-26)
+    Tokenomics v1 (2022-05-29)
 
     Methods:
         setup_token_distrib_area
@@ -87,17 +125,19 @@ class PlotterTokenomicsV1:
         """_summary_
 
         Args:
-            num_time_points (int, optional): _description_. Defaults to int(1e5).
+            num_time_points (int, optional): Number of data points on the time
+                axis. Using a larger number gives more fine granularity at the
+                cost of performance. Defaults to int(1e5).
 
         Returns:
-            Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-                category_vest_map, eight_year_vest_map
+            dist_map_by_category (Dict[str, np.ndarray])
+            dist_map_full_duration (Dict[str, np.ndarray]):
         """
 
         # Set allocation for "Team"
         genesis_cliff_categories: List[str] = ["Treasury"]
         """
-        category_vest_map: Dict[str, np.ndarray] = {
+        dist_map_by_category: Dict[str, np.ndarray] = {
             category: np.linspace(
                 start=self.total_supply * self.category_pct_map[category] * 0.25,
                 stop=self.total_supply * self.category_pct_map[category],
@@ -146,45 +186,45 @@ class PlotterTokenomicsV1:
         100.0
         """
         # Juno opts for 30-17-9-6 over 12 phases
-        incentive_phases: List[float] = [
-            17.35483871,
-            12.09677419,
-            10.87096774,
-            8.06451613,
-            8.06451613,
-            7.25806452,
-            6.4516129,
-            5.64516129,
-            4.83870968,
-            4.03225806,
-            3.22580645,
-            2.41935484,
-            2.82258065,
-            2.41935484,
-            2.41935484,
-            2.01612903,
-        ]
-        community_allocation = []
-        start = 0
-        category = "Community"
+        #
+        incentive_phases: List[float] = (
+            [17.35483871, 12.09677419, 10.87096774, 8.06451613]
+            + [8.06451613, 7.25806452, 6.4516129, 5.64516129]
+            + [4.83870968, 4.03225806, 3.22580645, 2.82258065]
+            + [2.41935484, 2.41935484, 2.41935484, 2.01612903]
+        )
+        """incentive_phases (List[float]): A breakdown of percentages of the 
+        community distribution. 
+        - Q: Why are there 16 phases?
+          Each incentive phase lasts 6 months. Since the community distribution
+          comes out across a time span of 8 years, there are 16 phases.
+        """
+        assert abs(np.array(incentive_phases).sum() - 100) <= 0.01
+        community_allocation: List[np.ndarray] = []
+        start_supply_pct = 0
+        group = "Community"
         for idx, phase_pct in enumerate(np.array(incentive_phases).cumsum()):
-            stop = (
-                (phase_pct / 100) * self.total_supply * self.category_pct_map[category]
+            phase_pct: float
+            stop_supply_pct = (
+                (phase_pct / 100) * self.total_supply *
+                self.category_pct_map[group]
             )
             community_allocation.append(
                 np.linspace(
-                    start,
-                    stop=stop,
-                    num=int(num_time_points / 16),
+                    start=start_supply_pct,
+                    stop=stop_supply_pct,
+                    num=int(num_time_points / TOKEN_SUPPLY_YEARS / 2),
                 )
             )
-            start = stop
-        eight_year_vest_map = {category: np.concatenate(community_allocation)}
+            start_supply_pct = stop_supply_pct
+        dist_map_full_duration: Dict[str: np.ndarray] = {
+            group: np.concatenate(community_allocation)
+        }
         assert all(
-            [arr.shape[0] == num_time_points for arr in eight_year_vest_map.values()]
+            [arr.shape[0] == num_time_points for arr in dist_map_full_duration.values()]
         )
 
-        return category_vest_map, eight_year_vest_map
+        return dist_map_by_category, dist_map_full_duration
 
     def plot_token_distrib_area(
         self,
@@ -200,11 +240,12 @@ class PlotterTokenomicsV1:
         Returns:
             go.Figure: _description_
         """
-        cvm: Dict[str, np.ndarray]
-        eyvm: Dict[str, np.ndarray]
-        cvm, eyvm = self.setup_token_distrib_area()
+        dist_map_by_category: Dict[str, np.ndarray]
+        dist_map_full_duration: Dict[str, np.ndarray]
+        dist_map_by_category, dist_map_full_duration = self.setup_token_distrib_area()
 
-        num_time_points: int = [v for v in cvm.values()][0].size
+        num_time_points: int = [
+            v for v in dist_map_by_category.values()][0].size
         time_axis = np.linspace(start=0, stop=8, num=num_time_points)
         x = time_axis
         layout = go.Layout(
@@ -217,38 +258,40 @@ class PlotterTokenomicsV1:
         fig = go.Figure(layout=layout)
 
         self.category_order = []
-        for idx, category in enumerate(eyvm):
+        for idx, category in enumerate(dist_map_full_duration):
             self.category_order.append(category)
 
             assert idx <= len(self.category_color_map)
             fig.add_trace(
                 go.Scatter(
                     x=x,
-                    y=eyvm[category],
+                    y=dist_map_full_duration[category],
                     hoverinfo="x+y",
                     mode="lines",
-                    line=dict(width=0.5, color=self.category_color_map[category]),
+                    line=dict(
+                        width=0.5, color=self.category_color_map[category]),
                     stackgroup="one",
                     name=category.upper(),
                 ),
             )
 
-        for new_idx, category in enumerate(cvm):
+        for new_idx, category in enumerate(dist_map_by_category):
             self.category_order.append(category)
             new_idx = idx + new_idx + 1
             fig.add_trace(
                 go.Scatter(
                     x=x,
-                    y=cvm[category],
+                    y=dist_map_by_category[category],
                     hoverinfo="x+y",
                     mode="lines",
-                    line=dict(width=0.5, color=self.category_color_map[category]),
+                    line=dict(
+                        width=0.5, color=self.category_color_map[category]),
                     stackgroup="one",  # define stack group
                     name=category.upper(),
                 )
             )
 
-        title: str = "NIBI’s 8-year token release schedule"
+        title: str = "Nibiru Chain (NIBI) Token Release Schedule"
         fig.update_layout(
             title=title,
             template="none",
@@ -265,14 +308,29 @@ class PlotterTokenomicsV1:
         plot_fname = "token_release_area"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname,
+                            file_type=save_type)
         return fig
 
     def plot_final_token_supply(
         self, save: bool = False, save_types: List[str] = ["svg"], pie_type: str = "pie"
     ) -> go.Figure:
+        """Creates a pie or sunburst chart for the token supply splits at 
+        maturity.
 
-        title: str = "NIBI’s token distribution at maturity, 8-years after launch"
+        Args:
+            save (bool, optional): _description_. Defaults to False.
+            save_types (List[str], optional): _description_. Defaults to ["svg"].
+            pie_type (str, optional): _description_. Defaults to "pie".
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            go.Figure: _description_
+        """
+
+        title: str = "Nibiru Chain (NIBI) Token Distribution at Maturity"
         subtitle: str = ""
 
         final_distrib: Dict[str, float] = self.category_pct_map
@@ -311,7 +369,8 @@ class PlotterTokenomicsV1:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin,
+                            r=plot_margin, b=0)
             )
 
         fig.update_layout(
@@ -322,7 +381,8 @@ class PlotterTokenomicsV1:
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname,
+                            file_type=save_type)
         return fig
 
 
@@ -333,10 +393,12 @@ class PlotterTokenomicsV0:
     token_distrib_df: pd.DataFrame
 
     def __init__(self) -> None:
-        df: pd.DataFrame = pd.read_csv(os.path.join("data", "token_distribution.csv"))
+        df: pd.DataFrame = pd.read_csv(
+            os.path.join("data", "token_distribution.csv"))
         df.month = df.month.apply(self.parse_date_column)
 
-        token_supply_columns: List[str] = ["month", "total_supply", "pct_max_supply"]
+        token_supply_columns: List[str] = [
+            "month", "total_supply", "pct_max_supply"]
         self.token_supply_df = df[token_supply_columns].copy(deep=True)
         self.token_supply_df = self.token_supply_df.set_index("month")
 
@@ -381,7 +443,8 @@ class PlotterTokenomicsV0:
         plot_fname = "token_release_schedule"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname,
+                            file_type=save_type)
 
         return fig
 
@@ -457,13 +520,15 @@ class PlotterTokenomicsV0:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin,
+                            r=plot_margin, b=0)
             )
 
         plot_fname: str = "genesis_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname,
+                            file_type=save_type)
         return fig
 
     def plot_final_token_supply(
@@ -478,7 +543,8 @@ class PlotterTokenomicsV0:
         names = [s.upper() for s in names]
         values = final_distrib.values
         # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
-        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
+        final_distrib_df: pd.DataFrame = pd.DataFrame(
+            dict(Group=names, Tokens=values))
 
         # Append "Category" column
         category_map: dict[str, str] = dict(
@@ -497,7 +563,8 @@ class PlotterTokenomicsV0:
             lambda g: category_map[g]
         )
         final_distrib_df["Category_sum"] = final_distrib_df.Category.apply(
-            lambda c: final_distrib_df.Tokens[final_distrib_df.Category == c].sum()
+            lambda c: final_distrib_df.Tokens[final_distrib_df.Category == c].sum(
+            )
         )
 
         if not pie_type in ["pie", "sunburst"]:
@@ -528,13 +595,15 @@ class PlotterTokenomicsV0:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin,
+                            r=plot_margin, b=0)
             )
 
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname,
+                            file_type=save_type)
         return fig
 
 
