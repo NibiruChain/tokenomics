@@ -102,17 +102,30 @@ class PlotterTokenomicsV1:
     category_pct_map: Dict[str, float]
     category_color_map: Dict[str, str]
     category_order: List[str]
-
     category_color_map: Dict[str, str]
 
     def __init__(self):
         self.groups = [
             # AllocationGroup("Team", 0.17, "rgb(195, 155, 213)"),
             # AllocationGroup("Treasury", 0.04, "rgb(83, 77, 224)"),
-            AllocationGroup("Team", 0.21, "rgb(83, 77, 224)"),
-            AllocationGroup("Private", 0.12, "rgb(255, 212, 229)"),
-            AllocationGroup("Seed", 0.07, "rgb(255, 243, 204)"),
-            AllocationGroup("Community", 0.60, "rgb(7, 0, 19)"),
+            AllocationGroup(
+                GroupType.PUBLIC_SALE, 0.08, Colors.GREEN,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.1, vest_start_month=0, vest_end_month=12)
+            ),
+            AllocationGroup(
+                GroupType.POST_SEED, 0.081328, Colors.GOLD,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0, vest_start_month=0, vest_end_month=36)),
+            AllocationGroup(
+                GroupType.SEED, 0.085172, Colors.SKY_BLUE,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.25, vest_start_month=9, vest_end_month=45)),
+            AllocationGroup(
+                GroupType.TEAM, 0.1535, Colors.PINK,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.1, vest_start_month=9, vest_end_month=24)),
+            AllocationGroup(GroupType.COMMUNITY, 0.60, Colors.PURPLE),
         ]
         self.category_color_map = {g.name: g.color for g in self.groups}
         self.category_pct_map = {g.name: g.pct for g in self.groups}
@@ -146,34 +159,46 @@ class PlotterTokenomicsV1:
             for category in genesis_cliff_categories
         }
         ones_tail = np.ones(num_time_points // 2, dtype=float)
-        for category, head in category_vest_map.items():
-            category_vest_map[category] = np.concatenate([head, ones_tail * head[-1]])
+        for category, head in dist_map_by_category.items():
+            dist_map_by_category[category] = np.concatenate([head, ones_tail * head[-1]])
         assert all(
-            [arr.shape[0] == num_time_points for arr in category_vest_map.values()]
+            [arr.shape[0] == num_time_points for arr in dist_map_by_category.values()]
         )
         """
-        category_vest_map: Dict[str, np.ndarray] = {}
+        dist_map_by_category: Dict[str, np.ndarray] = {}
 
-        # Set allocation for other linear vesters
-        four_year_vest_categories: List[str] = ["Team", "Private", "Seed"]
-        for category in four_year_vest_categories:
-            category_vest_map[category] = np.linspace(
-                start=self.total_supply * self.category_pct_map[category] * 0.25,
-                stop=self.total_supply * self.category_pct_map[category],
-                num=num_time_points * 3 // 8,
-            )
+        for group in self.groups:
+            if group.vi is None:
+                continue
+            dist_map_by_category[group.name] = group.vi.distrib_vec(
+                group_pct=self.category_pct_map[group.name])
 
-        ones_tail = np.ones(num_time_points // 2, dtype=float)
-        for category, head in category_vest_map.items():
-            if category not in genesis_cliff_categories:
-                zeros_before_head = np.zeros(num_time_points // 8, dtype=float)
-                head = np.concatenate([zeros_before_head, head])
-                category_vest_map[category] = np.concatenate(
-                    [head, ones_tail * head[-1]]
-                )
+        # category = GroupType.PUBLIC_SALE
+        # vi = vesting.VestingInfo(
+        #     cliff_pct=0.1, vest_start_month=0, vest_end_month=12)
+        # dist_map_by_category[category] = vi.distrib_vec(
+        #     group_pct=self.category_pct_map[category])
+
+        # category = GroupType.PRIVATE
+        # vi = vesting.VestingInfo(
+        #     cliff_pct=0, vest_start_month=0, vest_end_month=36)
+        # dist_map_by_category[category] = vi.distrib_vec(
+        #     group_pct=self.category_pct_map[category])
+
+        # category = GroupType.SEED
+        # vi = vesting.VestingInfo(
+        #     cliff_pct=0.25, vest_start_month=9, vest_end_month=45)
+        # dist_map_by_category[category] = vi.distrib_vec(
+        #     group_pct=self.category_pct_map[category])
+
+        # category = GroupType.TEAM
+        # vi = vesting.VestingInfo(
+        #     cliff_pct=0.25, vest_start_month=12, vest_end_month=24)
+        # dist_map_by_category[category] = vi.distrib_vec(
+        #     group_pct=self.category_pct_map[category])
 
         assert all(
-            [arr.shape[0] == num_time_points for arr in category_vest_map.values()]
+            [arr.shape[0] == num_time_points for arr in dist_map_by_category.values()]
         )
 
         """
@@ -339,7 +364,8 @@ class PlotterTokenomicsV1:
         values = [v for v in final_distrib.values()]
 
         # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
-        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
+        final_distrib_df: pd.DataFrame = pd.DataFrame(
+            dict(Group=names, Tokens=values))
 
         if not pie_type in ["pie", "sunburst"]:
             raise ValueError(
@@ -352,7 +378,8 @@ class PlotterTokenomicsV1:
                 values="Tokens",
                 names="Group",
                 color="Group",
-                color_discrete_sequence=[v for v in self.category_color_map.values()],
+                color_discrete_sequence=[
+                    v for v in self.category_color_map.values()],
                 title=f"{title}<br><br><sup>{subtitle}</sup>",
             )
             # fig.update_traces(textinfo='percent+label', textposition='inside')
