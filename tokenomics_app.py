@@ -55,25 +55,23 @@ class TokenomicsPlotterV1:
     token_cumulative_distrib_df: pd.DataFrame
 
     total_supply = 1.5e9
-    category_pct_map: Dict[str, float] = {
-        "Team": 0.17,
-        "Treasury": 0.04,
-        "Private": 0.12,
-        "Seed": 0.07,
-        "Community": 0.60,
-    }
+    category_pct_map: Dict[str, float]
+    category_color_map: Dict[str, str]
     category_order: List[str]
 
-    colors: List[str] = [
-        "#" + c for c in ["005d5d", "9f1853", "570408", "6929c4", "1192e8"]
-    ]
     category_color_map: Dict[str, str]
 
     def __init__(self):
-        self.category_color_map = {
-            category: self.colors[idx]
-            for idx, category in enumerate(self.category_pct_map)
-        }
+        self.groups = [
+            # AllocationGroup("Team", 0.17, "rgb(195, 155, 213)"), 
+            # AllocationGroup("Treasury", 0.04, "rgb(83, 77, 224)"), 
+            AllocationGroup("Team", 0.21, "rgb(83, 77, 224)"), 
+            AllocationGroup("Private", 0.12, "rgb(255, 212, 229)"), 
+            AllocationGroup("Seed", 0.07, "rgb(255, 243, 204)"), 
+            AllocationGroup("Community", 0.60, "rgb(7, 0, 19)"), 
+            ]
+        self.category_color_map = {g.name: g.color for g in self.groups}
+        self.category_pct_map = {g.name: g.pct for g in self.groups}
         self.category_order = None
 
     def setup_token_distrib_area(
@@ -92,6 +90,7 @@ class TokenomicsPlotterV1:
 
         # Set allocation for "Team"
         genesis_cliff_categories: List[str] = ["Treasury"]
+        """
         category_vest_map: Dict[str, np.ndarray] = {
             category: np.linspace(
                 start=self.total_supply * self.category_pct_map[category] * 0.25,
@@ -106,6 +105,8 @@ class TokenomicsPlotterV1:
         assert all(
             [arr.shape[0] == num_time_points for arr in category_vest_map.values()]
         )
+        """
+        category_vest_map: Dict[str, np.ndarray] = {}
 
         # Set allocation for other linear vesters
         four_year_vest_categories: List[str] = ["Team", "Private", "Seed"]
@@ -213,7 +214,7 @@ class TokenomicsPlotterV1:
         for idx, category in enumerate(eyvm):
             self.category_order.append(category)
 
-            assert idx <= len(self.colors)
+            assert idx <= len(self.category_color_map)
             fig.add_trace(
                 go.Scatter(
                     x=x,
@@ -289,7 +290,7 @@ class TokenomicsPlotterV1:
                 values="Tokens",
                 names="Group",
                 color="Group",
-                color_discrete_sequence=self.colors,
+                color_discrete_sequence=[v for v in self.category_color_map.values()],
                 title=f"{title}<br><br><sup>{subtitle}</sup>",
             )
             # fig.update_traces(textinfo='percent+label', textposition='inside')
@@ -572,7 +573,6 @@ if __name__ == "__main__":
 
     app = dash.Dash()
     figures: List[go.Figure] = [
-        plotter_v1.plot_token_distrib_area(save=True),
         plotter_v1.plot_token_distrib_area(save=True),
         plotter_v1.plot_final_token_supply(save=True, pie_type="pie"),
         # plotter_v0.plot_token_release_schedule_area()),
