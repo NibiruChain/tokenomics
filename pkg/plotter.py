@@ -4,8 +4,9 @@ token economics writeups.
 
 Classes: 
     AllocationGroup
-    TokenomicsPlotterV1: Plotter for Tokenomics v1 (2022-05-29)
-    TokenomicsPlotterV0: Plotter from Feb., 2022
+    PlotterTokenomicsV1: Plotter for Tokenomics v1 (2022-05-29)
+    PlotterTokenomicsV0: Plotter from Feb., 2022
+    PlotterCustom: 
 """
 # mypy: ignore_missing_imports = True
 import os
@@ -20,9 +21,14 @@ import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
 
-# FONT_FAMILY: str = "IBM Plex Mono"
-FONT_FAMILY: str = "Consolas"
-# FONT_FAMILY: str = "Courier New"
+
+class FontFamily:
+    IbmPlexMono = "IBM Plex Mono"
+    Consolas = "Consolas"
+    CourierNew = "Courier New"
+
+
+FONT_FAMILY: str = FontFamily.Consolas
 
 
 @dataclasses.dataclass
@@ -42,10 +48,10 @@ def save_figure(fig: go.Figure, plot_fname: str, file_type: str):
         fig.write_image(os.path.join("plots", f"{plot_fname}.{file_type}"))
 
 
-class TokenomicsPlotterV1:
+class PlotterTokenomicsV1:
     """Plotter for Tokenomics v1 (2022-05-29)
-    
-    Methods: 
+
+    Methods:
         setup_token_distrib_area
         plot_token_distrib_area
         plot_final_token_supply
@@ -63,13 +69,13 @@ class TokenomicsPlotterV1:
 
     def __init__(self):
         self.groups = [
-            # AllocationGroup("Team", 0.17, "rgb(195, 155, 213)"), 
-            # AllocationGroup("Treasury", 0.04, "rgb(83, 77, 224)"), 
-            AllocationGroup("Team", 0.21, "rgb(83, 77, 224)"), 
-            AllocationGroup("Private", 0.12, "rgb(255, 212, 229)"), 
-            AllocationGroup("Seed", 0.07, "rgb(255, 243, 204)"), 
-            AllocationGroup("Community", 0.60, "rgb(7, 0, 19)"), 
-            ]
+            # AllocationGroup("Team", 0.17, "rgb(195, 155, 213)"),
+            # AllocationGroup("Treasury", 0.04, "rgb(83, 77, 224)"),
+            AllocationGroup("Team", 0.21, "rgb(83, 77, 224)"),
+            AllocationGroup("Private", 0.12, "rgb(255, 212, 229)"),
+            AllocationGroup("Seed", 0.07, "rgb(255, 243, 204)"),
+            AllocationGroup("Community", 0.60, "rgb(7, 0, 19)"),
+        ]
         self.category_color_map = {g.name: g.color for g in self.groups}
         self.category_pct_map = {g.name: g.pct for g in self.groups}
         self.category_order = None
@@ -259,9 +265,7 @@ class TokenomicsPlotterV1:
         plot_fname = "token_release_area"
         if save:
             for save_type in save_types:
-                save_figure(
-                    fig=fig, plot_fname=plot_fname, file_type=save_type
-                )
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
     def plot_final_token_supply(
@@ -318,13 +322,11 @@ class TokenomicsPlotterV1:
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(
-                    fig=fig, plot_fname=plot_fname, file_type=save_type
-                )
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
 
-class TokenomicsPlotterV0:
+class PlotterTokenomicsV0:
     """Plotter from Feb., 2022"""
 
     token_supply_df: pd.DataFrame
@@ -379,9 +381,7 @@ class TokenomicsPlotterV0:
         plot_fname = "token_release_schedule"
         if save:
             for save_type in save_types:
-                save_figure(
-                    fig=fig, plot_fname=plot_fname, file_type=save_type
-                )
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
 
         return fig
 
@@ -413,7 +413,7 @@ class TokenomicsPlotterV0:
         # Append "Category" column
         category_map: dict[str, str] = dict(
             SEED="Early Backers",
-            TEAM="Core Team",
+            TEAM="Team",
             TREASURY="Community",
             INSURANCE_FUND="Community",
             STAKERS="Community",
@@ -463,9 +463,7 @@ class TokenomicsPlotterV0:
         plot_fname: str = "genesis_supply"
         if save:
             for save_type in save_types:
-                save_figure(
-                    fig=fig, plot_fname=plot_fname, file_type=save_type
-                )
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
     def plot_final_token_supply(
@@ -536,13 +534,11 @@ class TokenomicsPlotterV0:
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(
-                    fig=fig, plot_fname=plot_fname, file_type=save_type
-                )
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
 
-class CustomPlotter:
+class PlotterCustom:
     def plot_foo(self) -> go.Figure:
         data: List[dict] = [
             dict(name="Buybacks", pct=55),
@@ -564,22 +560,3 @@ class CustomPlotter:
         )
         fig.update_traces(textinfo="percent+label", textposition="inside")
         return fig
-
-
-if __name__ == "__main__":
-    plotter_v0 = TokenomicsPlotterV0()
-    plotter_v1 = TokenomicsPlotterV1()
-    # custom = CustomPlotter()
-
-    app = dash.Dash()
-    figures: List[go.Figure] = [
-        plotter_v1.plot_token_distrib_area(save=True),
-        plotter_v1.plot_final_token_supply(save=True, pie_type="pie"),
-        # plotter_v0.plot_token_release_schedule_area()),
-        # plotter_v0.plot_token_release_schedule_line(save=True)),
-        # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
-        # custom.plot_foo()),
-    ]
-    app.layout = html.Div(children=[dcc.Graph(figure=figure) for figure in figures])
-
-    app.run_server(debug=True, use_reloader=False)
