@@ -17,7 +17,7 @@ packages = [{ include = "pkg" }]
 python = "^3.8"
 bech32 = "^1.2.0"
 python-dotenv = "^0.21.0"
-requests = "^2.28.1"
+requests = "^2.31.0"
 hdwallets = "^0.1.2"
 pre-commit = "^2.20.0"
 shutup = "^0.2.0"
