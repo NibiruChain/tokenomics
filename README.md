@@ -1,21 +1,40 @@
-<img src="./banner.jpg">
+# NibiruChain/research
 
-### [NIBI Tokenomics (Blog)][blog-tokenomics]
+This repository produces the mathematics underlying the Nibiru Chain tokenomics,
+defining the inflation curve for the community distribution, generating plots,
+and verifying correctness on polynomial factors used in the `x/inflation` of the
+network's source code.
 
-[blog-tokenomics]: https://nibiru.fi/blog
+- [Hacking](#hacking)
+- [Run the Tokenomics Dashboard](#run-the-tokenomics-dashboard)
 
-### Token Release
+## Hacking
 
-| Split (%) | Group | Description | Schedule  
-| :---: | :----: | ---- | ---- | 
-| 60   | Community | NIBI Liquidity Mining Program on Osmosis | Ongoing allocation with taper similar to Juno or Curve |
-| 19   | Team | Core Nibiru development team | 1 year cliff, then 3 year linear vest |
-| 10.5 | Early Backers / Private | Strategic partners and private investors | 1 year cliff, then 3 year linear vest |
-| 8.5  | Seed | Supportes of the initial development and launch to mainnet | 1 year cliff, then 3 year linear vest |
+```bash
+cargo install just
+```
 
-<img src="plots/token_release_area.svg">
+```bash
+just
+```
 
-As more tokens are released into the ecosystem, the distribution will eventually rest mostly in the hands of the community.
+## Run the Tokenomics Dashboard
 
-<img src="plots/final_token_supply.svg">
+```bash
+just i # install
+just run
+```
 
+This should display "Dash is runnning on http://127.0.0.1:8050/", or another
+similar success message.
+
+## Reference Links
+
+- [Public Tokenomics | Nibiru Chain](https://nibiru.fi/docs/learn/tokenomics.html)
+- [Internal Tokenomics | Nibiru Chain [NOTION]](https://www.notion.so/nibiru/Tokenomics-Nibiru-Chain-Internal-8150f253bbc14fd2a6f7fcc976b7b07d?pvs=4)
+
+## Task Tracking
+
+- [ ] docs: Explain directory strucutre 
+- [ ] feat: add `just` command for generating the tex pdf
+- [ ] feat: add latex dependency installation to the `just i`.
