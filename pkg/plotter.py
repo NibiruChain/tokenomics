@@ -8,6 +8,7 @@ Classes:
     PlotterTokenomicsV0: Plotter from Feb., 2022
     PlotterCustom: 
 """
+
 # mypy: ignore_missing_imports = True
 import os
 import dataclasses
@@ -20,23 +21,20 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
-from pkg.const import (TOKEN_SUPPLY_YEARS)
+from pkg.const import TOKEN_SUPPLY_YEARS
 from pkg import vesting
 
 
 class FontFamily:
-    """An enum class for font families. Not all font families are supported by 
+    """An enum class for font families. Not all font families are supported by
     plotly dash.
     """
+
     IbmPlexMono = "IBM Plex Mono"
     Consolas = "Consolas"
     CourierNew = "Courier New"
     Main = "Inter"
     # Main = "DM Sans" # Seems to not be available
-
-
-FONT_FAMILY: str = FontFamily.Main
-"""FONT_FAMILY: Constant for the font family to use while plotting."""
 
 
 @dataclasses.dataclass
@@ -107,22 +105,37 @@ class PlotterTokenomicsV1:
     def __init__(self):
         self.groups = [
             AllocationGroup(
-                GroupType.PUBLIC_SALE, 0.08, Colors.GREEN,
+                GroupType.PUBLIC_SALE,
+                0.08,
+                Colors.GREEN,
                 vi=vesting.VestingInfo(
-                    cliff_pct=0.1, vest_start_month=0, vest_end_month=12)
+                    cliff_pct=0.1, vest_start_month=0, vest_end_month=12
+                ),
             ),
             AllocationGroup(
-                GroupType.POST_SEED, 0.081328, Colors.GOLD,
+                GroupType.POST_SEED,
+                0.081328,
+                Colors.GOLD,
                 vi=vesting.VestingInfo(
-                    cliff_pct=0, vest_start_month=0, vest_end_month=36)),
+                    cliff_pct=0, vest_start_month=0, vest_end_month=36
+                ),
+            ),
             AllocationGroup(
-                GroupType.SEED, 0.08132871, Colors.SKY_BLUE,
+                GroupType.SEED,
+                0.08132871,
+                Colors.SKY_BLUE,
                 vi=vesting.VestingInfo(
-                    cliff_pct=0.25, vest_start_month=9, vest_end_month=45)),
+                    cliff_pct=0.25, vest_start_month=9, vest_end_month=45
+                ),
+            ),
             AllocationGroup(
-                GroupType.TEAM, 0.1535, Colors.PINK,
+                GroupType.TEAM,
+                0.1535,
+                Colors.PINK,
                 vi=vesting.VestingInfo(
-                    cliff_pct=0.1, vest_start_month=9, vest_end_month=24)),
+                    cliff_pct=0.1, vest_start_month=9, vest_end_month=24
+                ),
+            ),
             AllocationGroup(GroupType.COMMUNITY, 0.60, Colors.PURPLE),
         ]
         self.category_color_map = {g.name: g.color for g in self.groups}
@@ -169,7 +182,8 @@ class PlotterTokenomicsV1:
             if group.vi is None:
                 continue
             dist_map_by_category[group.name] = group.vi.distrib_vec(
-                group_pct=self.category_pct_map[group.name])
+                group_pct=self.category_pct_map[group.name]
+            )
 
         # category = GroupType.PUBLIC_SALE
         # vi = vesting.VestingInfo(
@@ -229,8 +243,7 @@ class PlotterTokenomicsV1:
         for idx, phase_pct in enumerate(np.array(incentive_phases).cumsum()):
             phase_pct: float
             stop_supply_pct = (
-                (phase_pct / 100) * self.total_supply *
-                self.category_pct_map[group]
+                (phase_pct / 100) * self.total_supply * self.category_pct_map[group]
             )
             community_allocation.append(
                 np.linspace(
@@ -240,7 +253,7 @@ class PlotterTokenomicsV1:
                 )
             )
             start_supply_pct = stop_supply_pct
-        dist_map_full_duration: Dict[str: np.ndarray] = {
+        dist_map_full_duration: Dict[str : np.ndarray] = {
             group: np.concatenate(community_allocation)
         }
         assert all(
@@ -267,8 +280,7 @@ class PlotterTokenomicsV1:
         dist_map_full_duration: Dict[str, np.ndarray]
         dist_map_by_category, dist_map_full_duration = self.setup_token_distrib_area()
 
-        num_time_points: int = [
-            v for v in dist_map_by_category.values()][0].size
+        num_time_points: int = [v for v in dist_map_by_category.values()][0].size
         time_axis = np.linspace(start=0, stop=8, num=num_time_points)
         x = time_axis
         layout = go.Layout(
@@ -291,8 +303,7 @@ class PlotterTokenomicsV1:
                     y=dist_map_full_duration[category],
                     hoverinfo="x+y",
                     mode="lines",
-                    line=dict(
-                        width=0.5, color=self.category_color_map[category]),
+                    line=dict(width=0.5, color=self.category_color_map[category]),
                     stackgroup="one",
                     name=category.upper(),
                 ),
@@ -307,8 +318,7 @@ class PlotterTokenomicsV1:
                     y=dist_map_by_category[category],
                     hoverinfo="x+y",
                     mode="lines",
-                    line=dict(
-                        width=0.5, color=self.category_color_map[category]),
+                    line=dict(width=0.5, color=self.category_color_map[category]),
                     stackgroup="one",  # define stack group
                     name=category.upper(),
                 )
@@ -318,7 +328,7 @@ class PlotterTokenomicsV1:
         fig.update_layout(
             title=title,
             template="none",
-            font_family=FONT_FAMILY,
+            font_family=FontFamily.Main,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -331,14 +341,13 @@ class PlotterTokenomicsV1:
         plot_fname = "token_release_area"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname,
-                            file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
     def plot_final_token_supply(
         self, save: bool = False, save_types: List[str] = ["svg"], pie_type: str = "pie"
     ) -> go.Figure:
-        """Creates a pie or sunburst chart for the token supply splits at 
+        """Creates a pie or sunburst chart for the token supply splits at
         maturity.
 
         Args:
@@ -362,8 +371,7 @@ class PlotterTokenomicsV1:
         values = [v for v in final_distrib.values()]
 
         # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
-        final_distrib_df: pd.DataFrame = pd.DataFrame(
-            dict(Group=names, Tokens=values))
+        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
 
         if not pie_type in ["pie", "sunburst"]:
             raise ValueError(
@@ -376,8 +384,7 @@ class PlotterTokenomicsV1:
                 values="Tokens",
                 names="Group",
                 color="Group",
-                color_discrete_sequence=[
-                    v for v in self.category_color_map.values()],
+                color_discrete_sequence=[v for v in self.category_color_map.values()],
                 title=f"{title}<br><br><sup>{subtitle}</sup>",
             )
             # fig.update_traces(textinfo='percent+label', textposition='inside')
@@ -394,20 +401,18 @@ class PlotterTokenomicsV1:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin,
-                            r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
             )
 
         fig.update_layout(
             template="none",
-            font_family=FONT_FAMILY,
+            font_family=FontFamily.Main,
         )
 
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname,
-                            file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
 
@@ -418,12 +423,10 @@ class PlotterTokenomicsV0:
     token_distrib_df: pd.DataFrame
 
     def __init__(self) -> None:
-        df: pd.DataFrame = pd.read_csv(
-            os.path.join("data", "token_distribution.csv"))
+        df: pd.DataFrame = pd.read_csv(os.path.join("data", "token_distribution.csv"))
         df.month = df.month.apply(self.parse_date_column)
 
-        token_supply_columns: List[str] = [
-            "month", "total_supply", "pct_max_supply"]
+        token_supply_columns: List[str] = ["month", "total_supply", "pct_max_supply"]
         self.token_supply_df = df[token_supply_columns].copy(deep=True)
         self.token_supply_df = self.token_supply_df.set_index("month")
 
@@ -468,8 +471,7 @@ class PlotterTokenomicsV0:
         plot_fname = "token_release_schedule"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname,
-                            file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
 
         return fig
 
@@ -545,15 +547,13 @@ class PlotterTokenomicsV0:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin,
-                            r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
             )
 
         plot_fname: str = "genesis_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname,
-                            file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
     def plot_final_token_supply(
@@ -568,8 +568,7 @@ class PlotterTokenomicsV0:
         names = [s.upper() for s in names]
         values = final_distrib.values
         # 'final_distrib_df' columns: Group, Tokens, Category, Category_sum
-        final_distrib_df: pd.DataFrame = pd.DataFrame(
-            dict(Group=names, Tokens=values))
+        final_distrib_df: pd.DataFrame = pd.DataFrame(dict(Group=names, Tokens=values))
 
         # Append "Category" column
         category_map: dict[str, str] = dict(
@@ -588,8 +587,7 @@ class PlotterTokenomicsV0:
             lambda g: category_map[g]
         )
         final_distrib_df["Category_sum"] = final_distrib_df.Category.apply(
-            lambda c: final_distrib_df.Tokens[final_distrib_df.Category == c].sum(
-            )
+            lambda c: final_distrib_df.Tokens[final_distrib_df.Category == c].sum()
         )
 
         if not pie_type in ["pie", "sunburst"]:
@@ -620,15 +618,13 @@ class PlotterTokenomicsV0:
             fig.update_traces(insidetextorientation="radial")
             plot_margin: int = 25
             fig.update_layout(
-                margin=dict(t=2 * plot_margin, l=plot_margin,
-                            r=plot_margin, b=0)
+                margin=dict(t=2 * plot_margin, l=plot_margin, r=plot_margin, b=0)
             )
 
         plot_fname: str = "final_token_supply"
         if save:
             for save_type in save_types:
-                save_figure(fig=fig, plot_fname=plot_fname,
-                            file_type=save_type)
+                save_figure(fig=fig, plot_fname=plot_fname, file_type=save_type)
         return fig
 
 
