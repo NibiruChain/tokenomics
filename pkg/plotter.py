@@ -106,8 +106,6 @@ class PlotterTokenomicsV1:
 
     def __init__(self):
         self.groups = [
-            # AllocationGroup("Team", 0.17, "rgb(195, 155, 213)"),
-            # AllocationGroup("Treasury", 0.04, "rgb(83, 77, 224)"),
             AllocationGroup(
                 GroupType.PUBLIC_SALE, 0.08, Colors.GREEN,
                 vi=vesting.VestingInfo(
@@ -118,7 +116,7 @@ class PlotterTokenomicsV1:
                 vi=vesting.VestingInfo(
                     cliff_pct=0, vest_start_month=0, vest_end_month=36)),
             AllocationGroup(
-                GroupType.SEED, 0.085172, Colors.SKY_BLUE,
+                GroupType.SEED, 0.08132871, Colors.SKY_BLUE,
                 vi=vesting.VestingInfo(
                     cliff_pct=0.25, vest_start_month=9, vest_end_month=45)),
             AllocationGroup(
