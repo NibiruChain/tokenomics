@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import pprint
+
 # os.environ["MPLBACKEND"] = "TKAgg"
 import numpy as np
 from pkg import plotter
@@ -16,12 +17,11 @@ import dash_html_components as html
 
 from dataclasses import dataclass
 
-SUPPLY_AT_MATURITY = 810_600_000
+SUPPLY_AT_MATURITY = 807_735_000
 
 
 @dataclass
 class DecayResult:
-    f_t: np.ndarray
     times: np.ndarray
     normal_f_t: np.ndarray
 
@@ -35,48 +35,74 @@ class DecayResult:
         for f in self.normal_f_t:
             print(f)
 
-    def target_vector(self):
-        return self.normal_f_t * SUPPLY_AT_MATURITY
-
-    def poly_coefs(self, degree=5):
-        snapshots = self.target_vector()
-        return np.polyfit(self.times, snapshots, degree)
-
-    def poly_fn(self):
-        coefs = self.poly_coefs()
-        return np.poly1d(coefs)
-
     def plot_polynomial(self) -> go.Figure:
         x = self.times
-
-        poly_fn = self.poly_fn()
-        y_poly = poly_fn(self.times)
-        y_target = self.target_vector()
+        y_target = self.normal_f_t * SUPPLY_AT_MATURITY
+        poly_coefs = np.polyfit(x, y_target, 8)
+        y_poly = np.poly1d(poly_coefs)(x)
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=x, y=y_poly, mode='lines', name='Polynomial Fit'))
-        fig.add_trace(go.Scatter(x=x, y=y_target,
-                      mode='lines', name='Target Vector'))
+        fig.add_trace(go.Scatter(x=x, y=y_poly, mode='lines', name='Polynomial Fit'))
+        fig.add_trace(go.Scatter(x=x, y=y_target, mode='lines', name='Target Vector'))
 
-        coef_display = [f"{c:.3e}" for c in self.poly_coefs()]
+        coef_display = [f"{c:.3e}" for c in poly_coefs]
         fig.update_layout(
             title='Polynomial Fit and Target Vector',
             xaxis_title='Time',
             yaxis_title='Value',
             font=dict(family="Inter"),
             annotations=[
-                dict(xref="paper", yref="paper", x=0.9, y=0.9, showarrow=False,
-                     text=f"Polynomial Coefs:\n{coef_display}", align="right"),
-                dict(xref="paper", yref="paper", x=0.9, y=0.8, showarrow=False,
-                     text=f"Supply (Fit Line):{round(y_poly.sum()):.3e}", align="right"),
-                dict(xref="paper", yref="paper", x=0.9, y=0.7, showarrow=False,
-                     text=f"Supply (Target Line):{y_target.sum():.3e}", align="right"),
+                dict(
+                    xref="paper",
+                    yref="paper",
+                    x=0.9,
+                    y=0.9,
+                    showarrow=False,
+                    text=f"Polynomial Coefs:\n{coef_display}",
+                    align="right",
+                ),
+                dict(
+                    xref="paper",
+                    yref="paper",
+                    x=0.9,
+                    y=0.8,
+                    showarrow=False,
+                    text=f"Supply (Fit Line):{round(y_poly.sum()):.3e}",
+                    align="right",
+                ),
+                dict(
+                    xref="paper",
+                    yref="paper",
+                    x=0.9,
+                    y=0.7,
+                    showarrow=False,
+                    text=f"Supply (Target Line):{y_target.sum():.3e}",
+                    align="right",
+                ),
             ],
         )
 
         # Show the figure
         return fig
+
+
+def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
+    print("\n————————————————————————————————————————")
+    print(f"decay_rate: {decay_rate}")
+
+    # in months
+    months = np.arange(1, time_years * 12 + 1, 1)
+    # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
+    print(f"times: {months}")
+
+    f_t = decay.ExponentialDecay.decay_amts(
+        amt_start=100, decay_rate=decay_rate, times=months
+    )
+    normalized_f_t = f_t / f_t.sum()
+    print(f"norm_f_t: {normalized_f_t}")
+    print(f"norm_f_t.sum(): {normalized_f_t.sum()}")
+
+    return DecayResult(normal_f_t=normalized_f_t, times=months)
 
 
 if __name__ == "__main__":
@@ -86,37 +112,22 @@ if __name__ == "__main__":
         plotter_v1 = plotter.PlotterTokenomicsV1()
         # custom = plotter.CustomPlotter()
 
-        decay = do_decay(decay_factor=0.2)
-        # decay.pprint()
+        d = do_decay(decay_rate=0.2)
+        # d.pprint()
 
         app = dash.Dash()
         figures: List[go.Figure] = [
-            plotter_v1.plot_token_distrib_area(save=True, save_types=["png",
-                                                                      "svg"]),
+            plotter_v1.plot_token_distrib_area(save=True, save_types=["png", "svg"]),
             plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
-            decay.plot_polynomial(),
+            d.plot_polynomial(),
             # plotter_v0.plot_token_release_schedule_area()),
             # plotter_v0.plot_token_release_schedule_line(save=True)),
             # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
             # custom.plot_foo()),
         ]
-        app.layout = html.Div(
-            children=[dcc.Graph(figure=figure) for figure in figures])
+        app.layout = html.Div(children=[dcc.Graph(figure=figure) for figure in figures])
 
         app.run_server(debug=True, use_reloader=False)
-
-    def do_decay(decay_factor=0.5, time_years=8) -> DecayResult:
-        times = np.linspace(start=0, stop=time_years,
-                            num=time_years * 12)  # in months
-        # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
-        f_t = decay.ExponentialDecay.decay_amts(
-            amt_start=100, decay_factor=decay_factor, times=times
-        )
-        print("\n————————————————————————————————————————")
-        print(f"decay_factor: {decay_factor}")
-        norm_f_t = f_t / f_t.sum()
-
-        return DecayResult(f_t=f_t, times=times, normal_f_t=norm_f_t)
 
     # do_decay()
     # do_decay(0.4)
