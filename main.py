@@ -100,33 +100,23 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
 
 
 if __name__ == "__main__":
+    # plotter_v0 = plotter.PlotterTokenomicsV0()
+    plotter_v1 = plotter.PlotterTokenomicsV1()
+    # custom = plotter.CustomPlotter()
 
-    def plotting():
-        # plotter_v0 = plotter.PlotterTokenomicsV0()
-        plotter_v1 = plotter.PlotterTokenomicsV1()
-        # custom = plotter.CustomPlotter()
+    d = do_decay(decay_rate=0.2)
+    # d.pprint()
 
-        d = do_decay(decay_rate=0.2)
-        # d.pprint()
+    app = dash.Dash()
+    figures: List[go.Figure] = [
+        plotter_v1.plot_token_distrib_area(save=True, save_types=["png", "svg"]),
+        plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
+        d.plot_polynomial(),
+        # plotter_v0.plot_token_release_schedule_area()),
+        # plotter_v0.plot_token_release_schedule_line(save=True)),
+        # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
+        # custom.plot_foo()),
+    ]
+    app.layout = html.Div(children=[dcc.Graph(figure=figure) for figure in figures])
 
-        app = dash.Dash()
-        figures: List[go.Figure] = [
-            plotter_v1.plot_token_distrib_area(save=True, save_types=["png", "svg"]),
-            plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
-            d.plot_polynomial(),
-            # plotter_v0.plot_token_release_schedule_area()),
-            # plotter_v0.plot_token_release_schedule_line(save=True)),
-            # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
-            # custom.plot_foo()),
-        ]
-        app.layout = html.Div(children=[dcc.Graph(figure=figure) for figure in figures])
-
-        app.run_server(debug=True, use_reloader=False)
-
-    # do_decay()
-    # do_decay(0.4)
-    # do_decay(0.3)
-    # do_decay(0.1)
-    plotting()
-
-# %%
+    app.run_server(debug=True, use_reloader=False)
