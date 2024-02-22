@@ -39,7 +39,7 @@ class DecayResult:
         fig.add_trace(go.Scatter(x=x, y=y_poly, mode='lines', name='Polynomial Fit'))
         fig.add_trace(go.Scatter(x=x, y=y_target, mode='lines', name='Target Vector'))
 
-        coef_display = [f"{c:.3e}" for c in poly_coefs]
+        coef_display = [f"{c:.6}" for c in poly_coefs]
         fig.update_layout(
             title='Polynomial Fit and Target Vector',
             xaxis_title='Time',
@@ -61,7 +61,7 @@ class DecayResult:
                     x=0.9,
                     y=0.8,
                     showarrow=False,
-                    text=f"Supply (Fit Line):{round(y_poly.sum()):.3e}",
+                    text=f"Supply (Fit Line):{round(y_poly.sum()):.6f}",
                     align="right",
                 ),
                 dict(
@@ -70,7 +70,7 @@ class DecayResult:
                     x=0.9,
                     y=0.7,
                     showarrow=False,
-                    text=f"Supply (Target Line):{y_target.sum():.3e}",
+                    text=f"Supply (Target Line):{y_target.sum():.6f}",
                     align="right",
                 ),
             ],
@@ -87,9 +87,9 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
     # in months
     months = np.arange(1, time_years * 12 + 1, 1)
     # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
-    print(f"times: {months}")
+    print(f"months: {months}")
 
-    f_t = decay.ExponentialDecay.decay_amts(
+    f_t = decay.exponential_decay(
         amt_start=100, decay_rate=decay_rate, times=months
     )
     normalized_f_t = f_t / f_t.sum()
@@ -100,6 +100,7 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
 
 
 if __name__ == "__main__":
+    np.set_printoptions(suppress=True)
     # plotter_v0 = plotter.PlotterTokenomicsV0()
     plotter_v1 = plotter.PlotterTokenomicsV1()
     # custom = plotter.CustomPlotter()
