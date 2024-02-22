@@ -1,5 +1,6 @@
 from numbers import Real
 from typing import Union
+
 import numpy as np
 
 
@@ -20,11 +21,8 @@ class ExponentialDecay:
 
     @staticmethod
     def decay_amts(amt_start: Real, decay_rate: Real, times: np.ndarray) -> np.ndarray:
-        print(f"amt_start: {amt_start}")
-        print(f"decay_factor: {decay_rate}")
-        print(f"times: {times}")
-        result = ExponentialDecay.calc_amt_final(
-            amt_start=amt_start, decay_rate=decay_rate, times=times
-        )
-        print(f"result: {result}")
-        return result
+        return amt_start * (1 - decay_rate) ** times
+
+
+def exponential_decay(amt_start: Real, decay_rate: Real, times: np.ndarray) -> np.ndarray:
+    return amt_start * (1 - decay_rate) ** times
