@@ -9,20 +9,17 @@ Classes:
     PlotterCustom: 
 """
 
-# mypy: ignore_missing_imports = True
-import os
 import dataclasses
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from plotly.express.colors import sequential
+import os
+from typing import Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Tuple
-from pkg.const import TOKEN_SUPPLY_YEARS
+
 from pkg import vesting
+from pkg.const import TOKEN_SUPPLY_YEARS
 
 
 class FontFamily:
@@ -68,6 +65,8 @@ class Colors:
     PINK = "rgb(200, 124, 226)"
     GOLD = "rgb(213, 175, 96)"
     GREEN = "rgb(130, 207, 179)"
+    RED = "rgb(255, 0, 0)"
+    YELLOW = "rgb(255, 255, 0)"
 
     LOGO_PINK = "rgb(255, 212, 229)"
     LOGO_TURQUOISE = "rgb(83, 77, 224)"
@@ -75,12 +74,14 @@ class Colors:
     LOGO_BLACK = "rgb(7, 0, 19)"
 
 
-class GroupType:
+class Group:
     TEAM = "Core Contributors"
-    POST_SEED = "Investors (Post-Seed)"
+    POST_SEED = "Investors (Post-Seed Bridge Round)"
     SEED = "Investors (Seed)"
     COMMUNITY = "Community"
     PUBLIC_SALE = "Public Sale"  # CoinList
+    STRATEGIC_ADVISORS = "Strategic Advisors"
+    FLEX = "Flex"
 
 
 class PlotterTokenomicsV1:
@@ -104,39 +105,62 @@ class PlotterTokenomicsV1:
 
     def __init__(self):
         self.groups = [
+            # Team
             AllocationGroup(
-                GroupType.PUBLIC_SALE,
-                0.08,
-                Colors.GREEN,
-                vi=vesting.VestingInfo(
-                    cliff_pct=0.1, vest_start_month=0, vest_end_month=12
-                ),
-            ),
-            AllocationGroup(
-                GroupType.POST_SEED,
-                0.081328,
-                Colors.GOLD,
-                vi=vesting.VestingInfo(
-                    cliff_pct=0, vest_start_month=0, vest_end_month=36
-                ),
-            ),
-            AllocationGroup(
-                GroupType.SEED,
-                0.08132871,
-                Colors.SKY_BLUE,
-                vi=vesting.VestingInfo(
-                    cliff_pct=0.25, vest_start_month=9, vest_end_month=45
-                ),
-            ),
-            AllocationGroup(
-                GroupType.TEAM,
+                Group.TEAM,
                 0.1535,
                 Colors.PINK,
                 vi=vesting.VestingInfo(
                     cliff_pct=0.1, vest_start_month=9, vest_end_month=24
                 ),
             ),
-            AllocationGroup(GroupType.COMMUNITY, 0.60, Colors.PURPLE),
+            # SEED
+            AllocationGroup(
+                Group.SEED,
+                0.08132871,
+                Colors.SKY_BLUE,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.25, vest_start_month=9, vest_end_month=45
+                ),
+            ),
+            # Bridge round
+            AllocationGroup(
+                Group.POST_SEED,
+                0.04102564,
+                Colors.GOLD,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0, vest_start_month=6, vest_end_month=36
+                ),
+            ),
+            # Strategic Advisors
+            AllocationGroup(
+                Group.STRATEGIC_ADVISORS,
+                0.035,
+                Colors.RED,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.25, vest_start_month=9, vest_end_month=39
+                ),
+            ),
+            # Coinlist
+            AllocationGroup(
+                Group.PUBLIC_SALE,
+                0.08,
+                Colors.GREEN,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0.1, vest_start_month=0, vest_end_month=12
+                ),
+            ),
+            # Flex
+            AllocationGroup(
+                Group.FLEX,
+                0.00530307,
+                Colors.YELLOW,
+                vi=vesting.VestingInfo(
+                    cliff_pct=0, vest_start_month=0, vest_end_month=36
+                ),
+            ),
+            # Community
+            AllocationGroup(Group.COMMUNITY, 0.60, Colors.PURPLE),
         ]
         self.category_color_map = {g.name: g.color for g in self.groups}
         self.category_pct_map = {g.name: g.pct for g in self.groups}
