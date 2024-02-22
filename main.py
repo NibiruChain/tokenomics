@@ -1,21 +1,15 @@
 # import matplotlib
-import pandas as pd
-import os
 import pprint
-
-# os.environ["MPLBACKEND"] = "TKAgg"
-import numpy as np
-from pkg import plotter
-from pkg import groups
-from pkg import decay
-from typing import List, Tuple
+from dataclasses import dataclass
+from typing import List
 
 import dash
 import dash_core_components as dcc
-import plotly.graph_objects as go
 import dash_html_components as html
+import numpy as np
+import plotly.graph_objects as go
 
-from dataclasses import dataclass
+from pkg import decay, plotter
 
 SUPPLY_AT_MATURITY = 807_735_000
 
