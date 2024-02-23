@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 
 from pkg import decay, plotter
 
-SUPPLY_AT_MATURITY = 807_735_000
+SUPPLY_AT_MATURITY = 800_000_000
 
 
 @dataclass
@@ -32,14 +32,19 @@ class DecayResult:
     def plot_polynomial(self) -> go.Figure:
         x = self.times
         y_target = self.normal_f_t * SUPPLY_AT_MATURITY
-        poly_coefs = np.polyfit(x, y_target, 8)
+        poly_coefs = np.polyfit(x, y_target, 9)
+
+        print("Polynomial Coefficients:")
+        for n in poly_coefs:
+            print(f"{n:.12f}")
+
         y_poly = np.poly1d(poly_coefs)(x)
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y_poly, mode='lines', name='Polynomial Fit'))
         fig.add_trace(go.Scatter(x=x, y=y_target, mode='lines', name='Target Vector'))
 
-        coef_display = [f"{c:.6}" for c in poly_coefs]
+        coef_display = [f"{c:.10}" for c in poly_coefs]
         fig.update_layout(
             title='Polynomial Fit and Target Vector',
             xaxis_title='Time',
@@ -85,18 +90,20 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
     print(f"decay_rate: {decay_rate}")
 
     # in months
-    months = np.arange(1, time_years * 12 + 1, 1)
-    # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
-    print(f"months: {months}")
+    times = np.arange(1, time_years * 12 + 1, 1)
+
+    # in years
+    # times = np.linspace(start=0, stop=time_years)
+    print(f"times: {times}")
 
     f_t = decay.exponential_decay(
-        amt_start=100, decay_rate=decay_rate, times=months
+        amt_start=100, decay_rate=decay_rate, times=times
     )
     normalized_f_t = f_t / f_t.sum()
     print(f"norm_f_t: {normalized_f_t}")
     print(f"norm_f_t.sum(): {normalized_f_t.sum()}")
 
-    return DecayResult(normal_f_t=normalized_f_t, times=months)
+    return DecayResult(normal_f_t=normalized_f_t, times=times)
 
 
 if __name__ == "__main__":
@@ -110,8 +117,8 @@ if __name__ == "__main__":
 
     app = dash.Dash()
     figures: List[go.Figure] = [
-        plotter_v1.plot_token_distrib_area(save=True, save_types=["png", "svg"]),
-        plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
+        # plotter_v1.plot_token_distrib_area(save=True, save_types=["png", "svg"]),
+        # plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
         d.plot_polynomial(),
         # plotter_v0.plot_token_release_schedule_area()),
         # plotter_v0.plot_token_release_schedule_line(save=True)),
