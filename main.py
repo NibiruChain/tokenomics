@@ -32,6 +32,7 @@ class DecayResult:
     def plot_polynomial(self) -> go.Figure:
         x = self.times
         y_target = self.normal_f_t * SUPPLY_AT_MATURITY
+        print(f"y_target: {y_target}")
         poly_coefs = np.polyfit(x, y_target, 5)
 
         print("Polynomial Coefficients:")
@@ -90,7 +91,7 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
     print(f"decay_rate: {decay_rate}")
 
     # times = np.arange(0, time_years * 12, 1) # in months
-    times = np.linspace(start=0, stop=time_years, num=96, endpoint=True) # in years
+    times = np.linspace(start=0, stop=time_years, num=time_years * 12)  # in years
 
     # in years
     # times = np.linspace(start=0, stop=time_years)
@@ -106,7 +107,7 @@ def do_decay(decay_rate=0.5, time_years=8) -> DecayResult:
 
 
 if __name__ == "__main__":
-    np.set_printoptions(suppress=True, precision=12)
+    np.set_printoptions(suppress=True, precision=6)
     # plotter_v0 = plotter.PlotterTokenomicsV0()
     plotter_v1 = plotter.PlotterTokenomicsV1()
     # custom = plotter.CustomPlotter()
