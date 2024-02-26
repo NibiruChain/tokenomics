@@ -16,7 +16,7 @@ import dash_html_components as html
 
 from dataclasses import dataclass
 
-SUPPLY_AT_MATURITY = 810_600_000
+SUPPLY_AT_MATURITY = 800_000_000
 
 
 @dataclass
@@ -30,6 +30,10 @@ class DecayResult:
         pprint.pprint(self.times)
         print("normal_f(t) := f(t) / f(t).sum()")
         pprint.pprint(self.normal_f_t)
+
+        print("Polynomial coefficients (decreasing order, "
+              + "the last coefficient is the intercept.):")
+        pprint.pprint(self.poly_coefs())
 
         print("normal_f(t) as a list for excel")
         for f in self.normal_f_t:
@@ -87,14 +91,15 @@ if __name__ == "__main__":
         # custom = plotter.CustomPlotter()
 
         decay = do_decay(decay_factor=0.2)
-        # decay.pprint()
+        decay.pprint()
 
         app = dash.Dash()
         figures: List[go.Figure] = [
             plotter_v1.plot_token_distrib_area(save=True, save_types=["png",
                                                                       "svg"]),
             plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
-            decay.plot_polynomial(),
+            # decay.plot_polynomial(),
+            # ----------------------- V0 Plots -----------------------
             # plotter_v0.plot_token_release_schedule_area()),
             # plotter_v0.plot_token_release_schedule_line(save=True)),
             # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
@@ -106,16 +111,17 @@ if __name__ == "__main__":
         app.run_server(debug=True, use_reloader=False)
 
     def do_decay(decay_factor=0.5, time_years=8) -> DecayResult:
-        times = np.linspace(start=0, stop=time_years,
-                            num=time_years * 12)  # in months
+        time_years = np.linspace(start=0, stop=time_years,
+                                 num=time_years * 12)  # in months
         # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
         f_t = decay.ExponentialDecay.decay_amts(
-            amt_start=100, decay_factor=decay_factor, times=times
+            amt_start=100, decay_factor=decay_factor, times=time_years
         )
         print("\n————————————————————————————————————————")
         print(f"decay_factor: {decay_factor}")
         norm_f_t = f_t / f_t.sum()
 
+        times = [t for t, _ in enumerate(norm_f_t)]
         return DecayResult(f_t=f_t, times=times, normal_f_t=norm_f_t)
 
     # do_decay()
