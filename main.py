@@ -1,13 +1,8 @@
-# import matplotlib
-import pandas as pd
-import os
 import pprint
-# os.environ["MPLBACKEND"] = "TKAgg"
 import numpy as np
 from pkg import plotter
-from pkg import groups
 from pkg import decay
-from typing import List, Tuple
+from typing import List
 
 import dash
 import dash_core_components as dcc
@@ -95,10 +90,13 @@ if __name__ == "__main__":
 
         app = dash.Dash()
         figures: List[go.Figure] = [
+            # plot: Token release schedule
             plotter_v1.plot_token_distrib_area(save=True, save_types=["png",
                                                                       "svg"]),
+            # plot: Token distribution at maturity
             plotter_v1.plot_final_token_supply(save=False, pie_type="pie"),
-            # decay.plot_polynomial(),
+            # plot: Polynomial comparison
+            decay.plot_polynomial(),
             # ----------------------- V0 Plots -----------------------
             # plotter_v0.plot_token_release_schedule_area()),
             # plotter_v0.plot_token_release_schedule_line(save=True)),
