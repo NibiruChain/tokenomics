@@ -1,13 +1,14 @@
 import pprint
+import io
 import numpy as np
 from pkg import plotter
 from pkg import decay
-from typing import List
+from typing import List, Union
 
 import dash
-import dash_core_components as dcc
+from dash import dcc
+from dash import html
 import plotly.graph_objects as go
-import dash_html_components as html
 
 from dataclasses import dataclass
 
@@ -21,18 +22,24 @@ class DecayResult:
     normal_f_t: np.ndarray
 
     def pprint(self):
-        print("times:")
-        pprint.pprint(self.times)
-        print("normal_f(t) := f(t) / f(t).sum()")
-        pprint.pprint(self.normal_f_t)
+        out_buffer = io.StringIO()
 
-        print("Polynomial coefficients (decreasing order, "
-              + "the last coefficient is the intercept.):")
-        pprint.pprint(self.poly_coefs())
+        out_buffer.write("times:\n")
+        pprint.pprint(self.times, stream=out_buffer)
+        out_buffer.write("normal_f(t) := f(t) / f(t).sum()\n")
+        pprint.pprint(self.normal_f_t, stream=out_buffer)
 
-        print("normal_f(t) as a list for excel")
+        out_buffer.write("Polynomial coefficients (decreasing order, "
+                         + "the last coefficient is the intercept.):\n")
+        pprint.pprint(self.poly_coefs(), stream=out_buffer)
+
+        out_buffer.write("normal_f(t) as a list for excel\n")
         for f in self.normal_f_t:
-            print(f)
+            out_buffer.write(str(f) + "\n")
+
+        pretty_str = out_buffer.getvalue()
+        out_buffer.close()
+        return pretty_str
 
     def target_vector(self):
         return self.normal_f_t * SUPPLY_AT_MATURITY
@@ -103,8 +110,24 @@ if __name__ == "__main__":
             # plotter_v0.plot_genesis_supply(save=True, pie_type="sunburst")),
             # custom.plot_foo()),
         ]
-        app.layout = html.Div(
-            children=[dcc.Graph(figure=figure) for figure in figures])
+
+        def parse_figure(
+            fig: Union[go.Figure, dcc.Markdown],
+        ) -> Union[dcc.Graph, dcc.Markdown]:
+            try:
+                return dcc.Graph(figure=fig)
+            except BaseException:
+                assert isinstance(fig, dcc.Markdown)
+                return fig
+
+        app.layout = html.Div([
+            html.Div(children=[parse_figure(fig=figure)
+                     for figure in figures]),
+            html.P(f"{decay.pprint()}"),
+            # dcc.Markdown("""
+            #                 # Hello there
+            #                 """),
+        ])
 
         app.run_server(debug=True, use_reloader=False)
 
@@ -122,10 +145,6 @@ if __name__ == "__main__":
         times = [t for t, _ in enumerate(norm_f_t)]
         return DecayResult(f_t=f_t, times=times, normal_f_t=norm_f_t)
 
-    # do_decay()
-    # do_decay(0.4)
-    # do_decay(0.3)
-    # do_decay(0.1)
     plotting()
 
 # %%
