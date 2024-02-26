@@ -23,7 +23,7 @@ class VestingInfo:
         group_pct: float,
         num_time_points: int = int(1e5),
     ) -> np.ndarray:
-        token_supply_months = (TOKEN_SUPPLY_YEARS * 12)
+        token_supply_months = TOKEN_SUPPLY_YEARS * 12
         supply_start = SUPPLY_AT_MATURITY * group_pct * self.cliff_pct
         supply_end = SUPPLY_AT_MATURITY * group_pct
         head = np.linspace(
@@ -34,13 +34,14 @@ class VestingInfo:
         years_before_vest = self.months_before_vest()
         if years_before_vest > 0:
             zeros_before_head = np.zeros(
-                num_time_points * self.months_before_vest() // token_supply_months, dtype=float,
+                num_time_points * self.months_before_vest() // token_supply_months,
+                dtype=float,
             )
             head = np.concatenate([zeros_before_head, head])
 
         ones_tail = np.ones(
-            num_time_points * self.months_after_vest() // token_supply_months, dtype=float)
-
-        return np.concatenate(
-            [head, ones_tail * head[-1]]
+            num_time_points * self.months_after_vest() // token_supply_months,
+            dtype=float,
         )
+
+        return np.concatenate([head, ones_tail * head[-1]])
