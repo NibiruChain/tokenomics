@@ -35,3 +35,9 @@ build:
   poetry build
 
 alias b := build
+
+fmt: 
+  poetry run black .
+
+lint:
+  poetry run mypy pkg main.py
