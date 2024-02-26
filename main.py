@@ -3,7 +3,7 @@ import io
 import numpy as np
 from pkg import plotter
 from pkg import decay
-from typing import List, Union
+from typing import List, Union, Any, Dict
 
 import dash
 from dash import dcc
@@ -22,24 +22,24 @@ class DecayResult:
     normal_f_t: np.ndarray
 
     def pprint(self):
+        """Pretty-print results"""
         out_buffer = io.StringIO()
 
-        out_buffer.write("times:\n")
-        pprint.pprint(self.times, stream=out_buffer)
-        out_buffer.write("normal_f(t) := f(t) / f(t).sum()\n")
-        pprint.pprint(self.normal_f_t, stream=out_buffer)
-
-        out_buffer.write("Polynomial coefficients (decreasing order, "
-                         + "the last coefficient is the intercept.):\n")
-        pprint.pprint(self.poly_coefs(), stream=out_buffer)
-
-        out_buffer.write("normal_f(t) as a list for excel\n")
-        for f in self.normal_f_t:
-            out_buffer.write(str(f) + "\n")
+        pprint.pprint(self.pprint_data(), stream=out_buffer)
 
         pretty_str = out_buffer.getvalue()
         out_buffer.close()
         return pretty_str
+
+    def pprint_data(self) -> Dict[str, Any]:
+        """Pretty-print results as a dictionary. This format is easier to work
+        with inside Python."""
+        return {
+            "polynomial_coefs (decreasing order, last coef is intercept)":
+                [c for c in self.poly_coefs(degree=5)],
+            "times": f"{self.times[:2]}...{self.times[-2:]}",
+            "normal_f(t) := f(t) / f(t).sum()": self.normal_f_t,
+        }
 
     def target_vector(self):
         return self.normal_f_t * SUPPLY_AT_MATURITY
@@ -120,13 +120,15 @@ if __name__ == "__main__":
                 assert isinstance(fig, dcc.Markdown)
                 return fig
 
+        text_elems = []  # HTML text elements
+        for k, v in decay.pprint_data().items():
+            text_elems.append(html.H2(k))
+            text_elems.append(html.P(f"{v}\n"))
+
         app.layout = html.Div([
             html.Div(children=[parse_figure(fig=figure)
                      for figure in figures]),
-            html.P(f"{decay.pprint()}"),
-            # dcc.Markdown("""
-            #                 # Hello there
-            #                 """),
+            *text_elems,
         ])
 
         app.run_server(debug=True, use_reloader=False)
@@ -134,7 +136,6 @@ if __name__ == "__main__":
     def do_decay(decay_factor=0.5, time_years=8) -> DecayResult:
         time_years = np.linspace(start=0, stop=time_years,
                                  num=time_years * 12)  # in months
-        # times = np.linspace(start=0, stop=time_span, num=time_span) # in years
         f_t = decay.ExponentialDecay.decay_amts(
             amt_start=100, decay_factor=decay_factor, times=time_years
         )
